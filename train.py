@@ -1,6 +1,7 @@
 from transformers import (
     AutoTokenizer,
     AutoModelForSeq2SeqLM,
+    DataCollatorForSeq2Seq,
     Seq2SeqTrainingArguments,
     Seq2SeqTrainer,
     TrainerCallback 
@@ -15,21 +16,29 @@ OUTPUT_DIR = "./saved_model"
 dataset = load_dataset(DATASET_NAME)
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
-def preprocess(examples):
+def preprocess_function(examples):
     inputs = ["summarize: " + text for text in examples["text"]]
-    model_inputs = tokenizer(inputs, max_length=512, truncation=True)
+    model_inputs = tokenizer(
+        inputs,
+        max_length=512,
+        truncation=True,
+        padding="max_length",  
+        return_tensors="pt"   
+    )
     
     with tokenizer.as_target_tokenizer():
         labels = tokenizer(
-            examples["summary"], 
-            max_length=128, 
-            truncation=True
+            examples["summary"],
+            max_length=128,
+            truncation=True,
+            padding="max_length", 
+            return_tensors="pt"
         )
     
     model_inputs["labels"] = labels["input_ids"]
     return model_inputs
 
-tokenized_dataset = dataset.map(preprocess, batched=True)
+tokenized_dataset = dataset.map(preprocess_function, batched=True)
 
 model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
 training_args = Seq2SeqTrainingArguments(
@@ -38,7 +47,7 @@ training_args = Seq2SeqTrainingArguments(
     per_device_eval_batch_size=4,
     num_train_epochs=3,
     save_strategy="epoch",
-    evaluation_strategy="epoch",
+    eval_strategy="epoch",
     logging_dir="./logs",
     learning_rate=3e-5,
     weight_decay=0.01,
@@ -68,12 +77,21 @@ def compute_metrics(eval_pred):
         'rougeL': sum(s['rougeL'].fmeasure for s in scores) / len(scores),
     }
 
+data_collator = DataCollatorForSeq2Seq(
+    tokenizer,
+    model=model,
+    padding=True,
+    max_length=512,  
+    pad_to_multiple_of=8  
+)
+
 trainer = Seq2SeqTrainer(
     model=model,
     args=training_args,
     train_dataset=tokenized_dataset["train"],
     eval_dataset=tokenized_dataset["validation"],
     tokenizer=tokenizer,
+    data_collator=data_collator,
     compute_metrics=compute_metrics,
     callbacks=[LoggingCallback()]
 )

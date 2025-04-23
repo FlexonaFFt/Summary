@@ -2,4 +2,5 @@ transformers
 sentencepiece
 accelerate
 datasets
+rouge_score
 torch 
