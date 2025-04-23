@@ -9,6 +9,9 @@ from transformers import (
 from datasets import load_dataset
 from rouge_score import rouge_scorer
 
+import os
+os.environ["WANDB_DISABLED"] = "true"
+
 MODEL_NAME = "google/mt5-small"
 DATASET_NAME = "IlyaGusev/gazeta"
 OUTPUT_DIR = "./saved_model"
@@ -51,7 +54,8 @@ training_args = Seq2SeqTrainingArguments(
     logging_dir="./logs",
     learning_rate=3e-5,
     weight_decay=0.01,
-    predict_with_generate=True
+    predict_with_generate=True,
+    report_to="none"
 )
 
 class LoggingCallback(TrainerCallback):
