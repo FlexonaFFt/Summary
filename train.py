@@ -12,7 +12,7 @@ from rouge_score import rouge_scorer
 import os
 os.environ["WANDB_DISABLED"] = "true"
 
-MODEL_NAME = "google/mt5-small"
+MODEL_NAME = "google/mt5-tiny"
 DATASET_NAME = "IlyaGusev/gazeta"
 OUTPUT_DIR = "./saved_model"
 
@@ -46,8 +46,8 @@ tokenized_dataset = dataset.map(preprocess_function, batched=True)
 model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
 training_args = Seq2SeqTrainingArguments(
     output_dir=OUTPUT_DIR,
-    per_device_train_batch_size=4,
-    per_device_eval_batch_size=4,
+    per_device_train_batch_size=16,
+    per_device_eval_batch_size=16,
     num_train_epochs=3,
     save_strategy="epoch",
     eval_strategy="epoch",
