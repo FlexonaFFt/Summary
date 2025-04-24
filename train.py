@@ -46,8 +46,8 @@ tokenized_dataset = dataset.map(preprocess_function, batched=True)
 model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
 training_args = Seq2SeqTrainingArguments(
     output_dir=OUTPUT_DIR,
-    per_device_train_batch_size=64,
-    per_device_eval_batch_size=64,
+    per_device_train_batch_size=52,
+    per_device_eval_batch_size=52,
     num_train_epochs=3,
     save_strategy="epoch",
     eval_strategy="epoch",
