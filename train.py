@@ -4,10 +4,14 @@ from transformers import (
     DataCollatorForSeq2Seq,
     Seq2SeqTrainingArguments,
     Seq2SeqTrainer,
-    TrainerCallback 
+    TrainerCallback
 )
+
 from datasets import load_dataset
 from rouge_score import rouge_scorer
+
+import os
+os.environ["WANDB_DISABLED"] = "true"
 
 MODEL_NAME = "google/mt5-small"
 DATASET_NAME = "IlyaGusev/gazeta"
@@ -20,38 +24,39 @@ def preprocess_function(examples):
     inputs = ["summarize: " + text for text in examples["text"]]
     model_inputs = tokenizer(
         inputs,
-        max_length=512,
+        max_length=512,  
         truncation=True,
         padding="max_length",  
         return_tensors="pt"   
     )
     
-    with tokenizer.as_target_tokenizer():
-        labels = tokenizer(
-            examples["summary"],
-            max_length=128,
-            truncation=True,
-            padding="max_length", 
-            return_tensors="pt"
-        )
+    labels = tokenizer(
+        examples["summary"],
+        max_length=256,  
+        truncation=True,
+        padding="max_length", 
+        return_tensors="pt"
+    )
     
     model_inputs["labels"] = labels["input_ids"]
     return model_inputs
 
 tokenized_dataset = dataset.map(preprocess_function, batched=True)
 
-model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
+model = BertForSequenceClassification.from_pretrained(MODEL_NAME)
 training_args = Seq2SeqTrainingArguments(
     output_dir=OUTPUT_DIR,
-    per_device_train_batch_size=4,
-    per_device_eval_batch_size=4,
-    num_train_epochs=3,
+    per_device_train_batch_size=1024,
+    per_device_eval_batch_size=1024,
+    num_train_epochs=3,  
     save_strategy="epoch",
     eval_strategy="epoch",
     logging_dir="./logs",
-    learning_rate=3e-5,
+    learning_rate=5e-5, 
     weight_decay=0.01,
-    predict_with_generate=True
+    predict_with_generate=True,
+    report_to="none",
+    warmup_steps=500  
 )
 
 class LoggingCallback(TrainerCallback):
