@@ -43,12 +43,12 @@ def preprocess_function(examples):
 
 tokenized_dataset = dataset.map(preprocess_function, batched=True)
 
-model = BertForSequenceClassification.from_pretrained(MODEL_NAME)
+model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
 training_args = Seq2SeqTrainingArguments(
     output_dir=OUTPUT_DIR,
-    per_device_train_batch_size=1024,
-    per_device_eval_batch_size=1024,
-    num_train_epochs=3,  
+    per_device_train_batch_size=16,
+    per_device_eval_batch_size=16,
+    num_train_epochs=3,
     save_strategy="epoch",
     eval_strategy="epoch",
     logging_dir="./logs",
@@ -56,7 +56,7 @@ training_args = Seq2SeqTrainingArguments(
     weight_decay=0.01,
     predict_with_generate=True,
     report_to="none",
-    warmup_steps=500  
+    warmup_steps=500
 )
 
 class LoggingCallback(TrainerCallback):
