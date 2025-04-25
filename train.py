@@ -24,7 +24,7 @@ def preprocess_function(examples):
     inputs = ["summarize: " + text for text in examples["text"]]
     model_inputs = tokenizer(
         inputs,
-        max_length=512,  
+        max_length=256,  
         truncation=True,
         padding="max_length",  
         return_tensors="pt"   
@@ -32,7 +32,7 @@ def preprocess_function(examples):
     
     labels = tokenizer(
         examples["summary"],
-        max_length=256,  
+        max_length=128,  
         truncation=True,
         padding="max_length", 
         return_tensors="pt"
