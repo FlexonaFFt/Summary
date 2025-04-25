@@ -1,6 +1,6 @@
-from transformers import TrainerCallback  # Импортируем базовый класс
+from transformers import TrainerCallback 
 
-class MemoryOptimizationCallback(TrainerCallback):  # Наследуемся от правильного класса
+class MemoryOptimizationCallback(TrainerCallback):  
     def on_step_end(self, args, state, control, **kwargs):
         torch.cuda.empty_cache()
         gc.collect()
@@ -43,7 +43,7 @@ training_args = Seq2SeqTrainingArguments(
     dataloader_pin_memory=False,
 )
 
-dataset = load_dataset("IlyaGusev/gazeta", split="train[:50%]")  
+dataset = load_dataset("IlyaGusev/gazeta", split="train[:15%]")  
 
 def preprocess_function(examples):
     inputs = ["summarize: " + doc for doc in examples["text"]]
