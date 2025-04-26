@@ -2,7 +2,7 @@ from transformers import T5ForConditionalGeneration, T5Tokenizer
 import torch
 
 class TextSummarizer:
-    def __init__(self, model_path="./final_model"):
+    def __init__(self, model_path="../final_model"):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.tokenizer = T5Tokenizer.from_pretrained(
             "cointegrated/rut5-small", 
