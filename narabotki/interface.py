@@ -11,7 +11,7 @@ class TextSummarizer:
         self.model = T5ForConditionalGeneration.from_pretrained(model_path).to(self.device)
         print(f"Модель загружена на {self.device}")
 
-    def summarize(self, text, max_length=100, min_length=30, variation=0.8):
+    def summarize(self, text, max_length=256, min_length=30, variation=0.8):
         """
         variation: коэффициент разнообразия (0.0-1.0)
         """
@@ -51,7 +51,10 @@ if __name__ == "__main__":
     
     summary1 = summarizer.summarize(sample_text, max_length=50)
     summary2 = summarizer.summarize(sample_text, max_length=75)
+    summary3 = summarizer.summarize(sample_text)
     print("\nРезультат суммаризации:")
     print(summary1)
     print()
     print(summary2)
+    print()
+    print(summary3)

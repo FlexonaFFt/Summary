@@ -29,12 +29,12 @@ training_args = Seq2SeqTrainingArguments(
     output_dir="./results",
     per_device_train_batch_size=2,
     per_device_eval_batch_size=1,
-    gradient_accumulation_steps=4,
+    gradient_accumulation_steps=2,
     learning_rate=3e-5,
-    num_train_epochs=3,  
-    fp16=True,
+    num_train_epochs=5,  
+    fp16=False,
     gradient_checkpointing=True,
-    optim="adafactor",
+    optim="adamw_torch",
     eval_strategy="no",
     save_strategy="steps",
     save_steps=500,
@@ -43,7 +43,7 @@ training_args = Seq2SeqTrainingArguments(
     dataloader_pin_memory=False,
 )
 
-dataset = load_dataset("IlyaGusev/gazeta", split="train[:15%]")  
+dataset = load_dataset("IlyaGusev/gazeta", split="train[:50%]")  
 
 def preprocess_function(examples):
     inputs = ["summarize: " + doc for doc in examples["text"]]
@@ -84,5 +84,5 @@ finally:
     gc.collect()
 
 if accelerator.is_main_process:
-    trainer.save_model("./final_model")
+    trainer.save_model("../final_model")
     print("Модель сохранена")
