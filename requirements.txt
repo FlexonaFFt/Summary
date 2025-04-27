@@ -4,3 +4,7 @@ accelerate
 datasets
 rouge_score
 torch 
+fastapi
+uvicorn
+python-multipart
+python-docx
