@@ -55,6 +55,34 @@ async def summarize_file(file_id: str, max_length: int = 150):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error summarizing text: {str(e)}")
 
+@app.post("/summarize/long/{file_id}")
+async def summarize_long_file(file_id: str):
+
+    try:
+        text = get_text_by_file_id(file_id, UPLOAD_DIR)
+        summary = summarizer.summarize_long_text(
+            text=text,
+            max_length=256,
+            min_length=30
+        )
+        
+        return {
+            "file_id": file_id,
+            "summary": summary,
+            "success": True
+        }
+        
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"File with ID {file_id} not found"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Summarization error: {str(e)}"
+        )
+
 @app.post("/summarize/long")
 async def summarize_long_text(request: SummarizationRequest):
     try:

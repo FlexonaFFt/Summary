@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 from enum import Enum
 
+class Language(str, Enum):
+    RU = 'ru'
+    EN = 'en'
+
 class UploadResponse(BaseModel):
     file_id: str
     filename: str
@@ -18,3 +22,4 @@ class SummarizationRequest(BaseModel):
     text: str
     max_length: int = 256
     min_length: int = 30
+
