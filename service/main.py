@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 from functions import (
@@ -19,9 +20,26 @@ async def upload_file(file: UploadFile = File(...)):
     if not file:
         raise HTTPException(status_code=400, detail="No file provided")
     
+    # Ограничение размера файла (например, 15 МБ)
+    max_file_size = 15 * 1024 * 1024  # 15 MB
+    file_size = 0
+    for chunk in file.file:
+        file_size += len(chunk)
+        if file_size > max_file_size:
+            raise HTTPException(status_code=400, detail="File size exceeds 10 MB limit")
+    file.file.seek(0)  # Сбросить указатель файла после подсчета размера
+    
+    # Проверка поддерживаемых расширений
+    allowed_extensions = [".txt", ".md", ".csv", ".docx", ".pdf"]
+    file_extension = Path(file.filename).suffix.lower()
+    if file_extension not in allowed_extensions:
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: {file_extension}")
+    
     try:
         file_id = generate_file_id()
         extracted_text = extract_text_from_file(file)
+        if extracted_text.startswith("Error"):
+            raise HTTPException(status_code=400, detail=extracted_text)
         text_file_path = save_extracted_text(extracted_text, file_id, UPLOAD_DIR)
         
         return UploadResponse(

@@ -7,8 +7,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict
 from fastapi import UploadFile
-from docx import Document
 from transformers import T5ForConditionalGeneration, T5Tokenizer
+
+import pdfplumber
+from pdf2image import convert_from_bytes
+import pytesseract
+from docx import Document
 
 def generate_file_id() -> str:
     return str(uuid.uuid4())
@@ -30,10 +34,10 @@ def extract_text_from_file(file: UploadFile) -> str:
             doc = Document(io.BytesIO(content))
             return "\n".join([paragraph.text for paragraph in doc.paragraphs])
         elif file_extension == ".pdf":
-            import pdfplumber
             content = file.file.read()
             file.file.seek(0)
             
+            # Попробуем извлечь текст с помощью pdfplumber
             text = []
             with pdfplumber.open(io.BytesIO(content)) as pdf:
                 for page in pdf.pages:
@@ -41,7 +45,23 @@ def extract_text_from_file(file: UploadFile) -> str:
                     if page_text:
                         text.append(page_text)
             
-            return "\n".join(text)
+            extracted_text = "\n".join(text) if text else ""
+            
+            # Если текст не извлечен (например, PDF содержит только изображения), используем OCR
+            if not extracted_text.strip():
+                try:
+                    # Конвертируем PDF в изображения
+                    images = convert_from_bytes(content)
+                    ocr_text = []
+                    for image in images:
+                        text = pytesseract.image_to_string(image, lang='eng+rus')  # Поддержка русского и английского
+                        ocr_text.append(text)
+                    extracted_text = "\n".join(ocr_text)
+                except Exception as ocr_e:
+                    logging.error(f"OCR extraction failed: {str(ocr_e)}")
+                    return f"Error extracting text with OCR: {str(ocr_e)}"
+            
+            return extracted_text
         else:
             return f"Text extraction not supported for {file_extension} files"
     except Exception as e:
