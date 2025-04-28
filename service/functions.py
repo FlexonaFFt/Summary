@@ -29,6 +29,19 @@ def extract_text_from_file(file: UploadFile) -> str:
             file.file.seek(0)
             doc = Document(io.BytesIO(content))
             return "\n".join([paragraph.text for paragraph in doc.paragraphs])
+        elif file_extension == ".pdf":
+            import pdfplumber
+            content = file.file.read()
+            file.file.seek(0)
+            
+            text = []
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text.append(page_text)
+            
+            return "\n".join(text)
         else:
             return f"Text extraction not supported for {file_extension} files"
     except Exception as e:
@@ -94,34 +107,66 @@ class TextSummarizer:
         return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
 
     def summarize_long_text(self, text: str, max_length: int = 256, min_length: int = 30) -> str:
-        """Суммаризация длинного текста с сохранением контекста"""
-        # Разделяем текст на чанки с перекрытием
-        chunks = self._split_text_with_overlap(text)
-        
-        # Суммаризируем каждый чанк
+        chunks = self._split_text_with_overlap(text, chunk_size=300, overlap=100)
         chunk_summaries = []
         for chunk in chunks:
-            summary = self.summarize(chunk, max_length=max_length, min_length=min_length)
+            summary = self.summarize(chunk, max_length=100, min_length=20)
             chunk_summaries.append(summary)
         
-        # Объединяем суммаризации и делаем финальную суммаризацию
         combined_summary = ' '.join(chunk_summaries)
-        return self.summarize(combined_summary, max_length=max_length, min_length=min_length)
-
-    def _split_text_with_overlap(self, text: str, chunk_size: int = 512, overlap: int = 128) -> list:
-        """Разделяет текст на чанки с перекрытием"""
-        words = text.split()
-        chunks = []
-        i = 0
+        final_summary = self._postprocess_summary(
+            self.summarize(combined_summary, max_length=max_length, min_length=min_length))
         
-        while i < len(words):
-            end = min(i + chunk_size, len(words))
-            chunk = ' '.join(words[i:end])
-            chunks.append(chunk)
+        return final_summary
+
+    def _split_text_with_overlap(self, text: str, chunk_size: int = 300, overlap: int = 100) -> list:
+        """Разделяет текст на чанки с перекрытием, сохраняя целостность предложений"""
+        sentences = text.split('. ')
+        chunks = []
+        current_chunk = []
+        current_length = 0
+        
+        for i, sentence in enumerate(sentences):
+            sentence = sentence.strip()
+            if not sentence:
+                continue
+                
+            sentence_length = len(sentence.split())
             
-            if end < len(words):
-                i = end - overlap
+            if current_length + sentence_length <= chunk_size or not current_chunk:
+                current_chunk.append(sentence)
+                current_length += sentence_length
             else:
-                break
+                chunks.append('. '.join(current_chunk) + '.')
+                overlap_start = max(0, len(current_chunk) - overlap // 10)  # Примерно 10 предложений перекрытия
+                current_chunk = current_chunk[overlap_start:]
+                current_length = sum(len(s.split()) for s in current_chunk)
+                current_chunk.append(sentence)
+                current_length += sentence_length
+        
+        if current_chunk:
+            chunks.append('. '.join(current_chunk) + '.')
         
         return chunks
+
+    def _postprocess_summary(self, summary: str) -> str:
+        """Постобработка суммаризации для улучшения читаемости"""
+        sentences = summary.split('. ')
+        unique_sentences = []
+        seen = set()
+        
+        for sentence in sentences:
+            normalized = ' '.join(sentence.lower().split())
+            if normalized not in seen:
+                seen.add(normalized)
+                unique_sentences.append(sentence)
+        
+        filtered_sentences = [s for s in unique_sentences if len(s.split()) >= 5]
+        processed_summary = '. '.join(filtered_sentences)
+        processed_summary = processed_summary.replace('..', '.')
+        if processed_summary:
+            processed_summary = processed_summary[0].upper() + processed_summary[1:]
+            if not processed_summary.endswith('.'):
+                processed_summary += '.'
+        
+        return processed_summary
