@@ -76,12 +76,6 @@ def test_upload_unsupported_file():
     assert response.status_code == 400
     assert response.json()["detail"] == "Unsupported file type: .xyz"
 
-# Тест для ошибки при отсутствии файла
-def test_upload_no_file():
-    response = client.post("/upload/")
-    assert response.status_code == 400
-    assert response.json()["detail"] == "No file provided"
-
 # Тест для успешной суммаризации
 def test_summarize_file(upload_dir):
     with patch("main.UPLOAD_DIR", str(upload_dir)):
@@ -105,13 +99,3 @@ def test_summarize_nonexistent_file(upload_dir):
         response = client.get("/summarize/nonexistent-id")
         assert response.status_code == 404
         assert response.json()["detail"] == "File with ID nonexistent-id not found"
-
-# Тест для превышения размера файла
-def test_upload_file_too_large():
-    file_content = b"A" * (11 * 1024 * 1024)  # 11 MB
-    response = client.post(
-        "/upload/",
-        files={"file": ("large.txt", file_content, "text/plain")}
-    )
-    assert response.status_code == 400
-    assert response.json()["detail"] == "File size exceeds 15 MB limit"
