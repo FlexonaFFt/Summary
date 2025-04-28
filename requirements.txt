@@ -6,8 +6,10 @@ rouge_score
 torch 
 fastapi
 uvicorn
+pytest
 python-multipart
 python-docx
 pdf2image
 pytesseract
 pdf2image
+httpx
