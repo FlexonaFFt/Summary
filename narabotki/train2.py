@@ -50,7 +50,7 @@ def preprocess_function(examples):
     return tokenizer(
         text=inputs,
         text_target=examples["summary"],
-        max_length=128,  
+        max_length=512,  
         truncation=True,
         padding="max_length"
     )
@@ -67,6 +67,9 @@ class MemoryCallback(TrainerCallback):
         torch.cuda.empty_cache()
         gc.collect()
 
+"""Seq2SeqTrainer использует cross-entropy (вычислиет loss)
+   Обновляет веса через backpropagation (обратный проход)
+   Сохраняет модель каждые 500 шагов"""
 trainer = Seq2SeqTrainer(
     model=model,
     args=training_args,

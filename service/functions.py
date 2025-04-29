@@ -102,7 +102,7 @@ class TextSummarizer:
         self.model = T5ForConditionalGeneration.from_pretrained(model_path).to(self.device)
         logging.info(f"Model loaded on {self.device}")
 
-    def summarize(self, text: str, max_length: int = 256, min_length: int = 30, variation: float = 0.8) -> str:
+    def summarize(self, text: str, max_length: int = 125, min_length: int = 15, variation: float = 0.8) -> str:
         """Суммаризация текста с помощью локальной модели"""
         inputs = self.tokenizer(
             f"summarize: {text}",
@@ -119,7 +119,7 @@ class TextSummarizer:
             early_stopping=True,
             length_penalty=variation,
             no_repeat_ngram_size=3,
-            do_sample=True,
+            do_sample=False, # В значении True улучшает креативность
             temperature=0.7,
             top_k=50
         )

@@ -1,0 +1,14 @@
+transformers
+sentencepiece
+accelerate
+datasets
+rouge_score
+torch 
+pandas
+python-multipart
+python-docx
+pdf2image
+pytesseract
+scikit-learn
+numpy
+wandb
