@@ -1,192 +1,144 @@
+from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
+from typing import Tuple
 import os
-import uuid
-import logging
-import torch
-import io
-from enum import Enum
-from pathlib import Path
-from typing import Dict
-from fastapi import UploadFile
-from transformers import T5ForConditionalGeneration, T5Tokenizer
+import re
 
-import pdfplumber
-from pdf2image import convert_from_bytes
-import pytesseract
-from docx import Document
+# Кэш для модели и токенизатора
+_model = None
+_tokenizer = None
 
-def generate_file_id() -> str:
-    return str(uuid.uuid4())
+def load_model():
+    """Загружает модель и токенизатор"""
+    global _model, _tokenizer
+    if _model is None:
+        model_name = "IlyaGusev/rut5_base_sum_gazeta"
+        _tokenizer = AutoTokenizer.from_pretrained(model_name)
+        _model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+    return _model, _tokenizer
 
-def ensure_upload_dir(upload_dir: str = "uploads") -> None:
-    os.makedirs(upload_dir, exist_ok=True)
+def clean_text(text: str) -> str:
+    """Очищает текст от лишних пробелов и специальных символов"""
+    text = re.sub(r'\s+', ' ', text)  # Удаляем множественные пробелы
+    text = re.sub(r'[^\w\s.,;:!?()-]', ' ', text)  # Удаляем спецсимволы
+    return text.strip()
 
-def extract_text_from_file(file: UploadFile) -> str:
-    file_extension = Path(file.filename).suffix.lower()
+def count_words(text: str) -> int:
+    """Подсчитывает количество слов в тексте"""
+    return len(text.split())
+
+def split_into_chunks(text: str, max_chunk_words: int = 500) -> list:
+    """Разбивает текст на части по предложениям"""
+    sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', text) if s.strip()]
+    chunks = []
+    current_chunk = []
+    current_length = 0
     
-    try:
-        if file_extension in [".txt", ".md", ".csv"]:
-            contents = file.file.read()
-            file.file.seek(0)
-            return contents.decode("utf-8")
-        elif file_extension == ".docx":
-            content = file.file.read()
-            file.file.seek(0)
-            doc = Document(io.BytesIO(content))
-            return "\n".join([paragraph.text for paragraph in doc.paragraphs])
-        elif file_extension == ".pdf":
-            content = file.file.read()
-            file.file.seek(0)
-            
-            # Попробуем извлечь текст с помощью pdfplumber
-            text = []
-            with pdfplumber.open(io.BytesIO(content)) as pdf:
-                for page in pdf.pages:
-                    page_text = page.extract_text()
-                    if page_text:
-                        text.append(page_text)
-            
-            extracted_text = "\n".join(text) if text else ""
-            
-            # Если текст не извлечен (например, PDF содержит только изображения), используем OCR
-            if not extracted_text.strip():
-                try:
-                    # Конвертируем PDF в изображения
-                    images = convert_from_bytes(content)
-                    ocr_text = []
-                    for image in images:
-                        text = pytesseract.image_to_string(image, lang='eng+rus')  # Поддержка русского и английского
-                        ocr_text.append(text)
-                    extracted_text = "\n".join(ocr_text)
-                except Exception as ocr_e:
-                    logging.error(f"OCR extraction failed: {str(ocr_e)}")
-                    return f"Error extracting text with OCR: {str(ocr_e)}"
-            
-            return extracted_text
-        else:
-            return f"Text extraction not supported for {file_extension} files"
-    except Exception as e:
-        return f"Error extracting text: {str(e)}"
-
-def save_extracted_text(text: str, file_id: str, upload_dir: str = "uploads") -> str:
-    ensure_upload_dir(upload_dir)
-    text_filename = f"{file_id}_extracted.txt"
-    text_file_path = os.path.join(upload_dir, text_filename)
+    for sentence in sentences:
+        words_in_sentence = len(sentence.split())
+        if current_length + words_in_sentence > max_chunk_words and current_chunk:
+            chunks.append(' '.join(current_chunk))
+            current_chunk = []
+            current_length = 0
+        current_chunk.append(sentence)
+        current_length += words_in_sentence
     
-    with open(text_file_path, "w", encoding="utf-8") as file:
-        file.write(text)
+    if current_chunk:
+        chunks.append(' '.join(current_chunk))
     
-    return text_file_path
+    return chunks
 
-def get_text_by_file_id(file_id: str, upload_dir: str = "uploads") -> str:
-    text_filename = f"{file_id}_extracted.txt"
-    text_file_path = os.path.join(upload_dir, text_filename)
+def summarize_text_chunk(text: str, max_words: int, min_words: int, do_sample: bool) -> str:
+    """Суммаризирует одну часть текста"""
+    model, tokenizer = load_model()
     
-    if not os.path.exists(text_file_path):
-        raise FileNotFoundError(f"File with ID {file_id} not found")
+    # Конвертируем слова в токены с запасом
+    max_tokens = max_words * 2  # Эмпирический коэффициент
+    min_tokens = min_words * 1
     
-    with open(text_file_path, "r", encoding="utf-8") as file:
-        return file.read()
+    inputs = tokenizer(
+        text,
+        max_length=1024,
+        truncation=True,
+        return_tensors="pt"
+    )
+    
+    summary_ids = model.generate(
+        inputs["input_ids"],
+        max_length=max_tokens,
+        min_length=min_tokens,
+        num_beams=4,
+        early_stopping=True,
+        no_repeat_ngram_size=3,
+        length_penalty=1.5,
+        do_sample=do_sample,
+    )
+    
+    summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+    return clean_text(summary)
 
-def detect_language(text: str) -> str:
-    """Определяет язык текста (ru/en)"""
-    cyrillic_count = sum(1 for char in text if 'а' <= char.lower() <= 'я')
-    return 'ru' if cyrillic_count > len(text) * 0.3 else 'en'
-
-class TextSummarizer:
-    def __init__(self, model_path: str = "../middle_model"):
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.tokenizer = T5Tokenizer.from_pretrained(
-            "cointegrated/rut5-small", 
-            legacy=False
+def summarize_text(
+    text: str,
+    max_words: int = 150,
+    min_words: int = 50,
+    do_sample: bool = False
+) -> str:
+    """Основная функция суммаризации с обработкой больших текстов"""
+    text = clean_text(text)
+    if count_words(text) <= max_words:
+        return text  # Если текст уже короткий
+    
+    chunks = split_into_chunks(text)
+    summaries = []
+    
+    for chunk in chunks:
+        chunk_summary = summarize_text_chunk(
+            chunk,
+            max_words=max_words // len(chunks),
+            min_words=min_words // len(chunks),
+            do_sample=do_sample
         )
-        self.model = T5ForConditionalGeneration.from_pretrained(model_path).to(self.device)
-        logging.info(f"Model loaded on {self.device}")
+        summaries.append(chunk_summary)
+    
+    # Объединяем суммаризации и проверяем длину
+    final_summary = ' '.join(summaries)
+    final_words = final_summary.split()
+    
+    if len(final_words) > max_words:
+        final_summary = ' '.join(final_words[:max_words])
+    elif len(final_words) < min_words:
+        # Если суммаризация слишком короткая, пробуем еще раз
+        return summarize_text_chunk(text, max_words, min_words, do_sample)
+    
+    return final_summary
 
-    def summarize(self, text: str, max_length: int = 125, min_length: int = 15, variation: float = 0.8) -> str:
-        """Суммаризация текста с помощью локальной модели"""
-        inputs = self.tokenizer(
-            f"summarize: {text}",
-            return_tensors="pt",
-            max_length=512,
-            truncation=True
-        ).to(self.device)
-        
-        outputs = self.model.generate(
-            **inputs,
-            max_length=max_length,
-            min_length=min_length,
-            num_beams=5,
-            early_stopping=True,
-            length_penalty=variation,
-            no_repeat_ngram_size=3,
-            do_sample=False, # В значении True улучшает креативность
-            temperature=0.7,
-            top_k=50
-        )
-        
-        return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+def process_file(file_path: str, **kwargs) -> Tuple[str, str]:
+    """Обрабатывает файл и возвращает оригинал и суммаризацию"""
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Файл {file_path} не найден")
+    
+    with open(file_path, 'r', encoding='utf-8') as file:
+        text = file.read()
+    
+    if not text.strip():
+        raise ValueError("Файл пуст")
+    
+    text = clean_text(text)
+    summary = summarize_text(text, **kwargs)
+    return text, summary
 
-    def summarize_long_text(self, text: str, max_length: int = 256, min_length: int = 30) -> str:
-        chunks = self._split_text_with_overlap(text, chunk_size=300, overlap=100)
-        chunk_summaries = []
-        for chunk in chunks:
-            summary = self.summarize(chunk, max_length=100, min_length=20)
-            chunk_summaries.append(summary)
-        
-        combined_summary = ' '.join(chunk_summaries)
-        final_summary = self._postprocess_summary(
-            self.summarize(combined_summary, max_length=max_length, min_length=min_length))
-        
-        return final_summary
-
-    def _split_text_with_overlap(self, text: str, chunk_size: int = 300, overlap: int = 100) -> list:
-        """Разделяет текст на чанки с перекрытием, сохраняя целостность предложений"""
-        sentences = text.split('. ')
-        chunks = []
-        current_chunk = []
-        current_length = 0
-        
-        for i, sentence in enumerate(sentences):
-            sentence = sentence.strip()
-            if not sentence:
-                continue
-                
-            sentence_length = len(sentence.split())
-            
-            if current_length + sentence_length <= chunk_size or not current_chunk:
-                current_chunk.append(sentence)
-                current_length += sentence_length
-            else:
-                chunks.append('. '.join(current_chunk) + '.')
-                overlap_start = max(0, len(current_chunk) - overlap // 10)  # Примерно 10 предложений перекрытия
-                current_chunk = current_chunk[overlap_start:]
-                current_length = sum(len(s.split()) for s in current_chunk)
-                current_chunk.append(sentence)
-                current_length += sentence_length
-        
-        if current_chunk:
-            chunks.append('. '.join(current_chunk) + '.')
-        
-        return chunks
-
-    def _postprocess_summary(self, summary: str) -> str:
-        """Постобработка суммаризации для улучшения читаемости"""
-        sentences = summary.split('. ')
-        unique_sentences = []
-        seen = set()
-        
-        for sentence in sentences:
-            normalized = ' '.join(sentence.lower().split())
-            if normalized not in seen:
-                seen.add(normalized)
-                unique_sentences.append(sentence)
-        
-        filtered_sentences = [s for s in unique_sentences if len(s.split()) >= 5]
-        processed_summary = '. '.join(filtered_sentences)
-        processed_summary = processed_summary.replace('..', '.')
-        if processed_summary:
-            processed_summary = processed_summary[0].upper() + processed_summary[1:]
-            if not processed_summary.endswith('.'):
-                processed_summary += '.'
-        
-        return processed_summary
+def calculate_metrics(original: str, summary: str, request_params: dict) -> dict:
+    """Вычисляет метрики суммаризации"""
+    orig_len = count_words(original)
+    summ_len = count_words(summary)
+    
+    return {
+        "original_length": orig_len,
+        "summary_length": summ_len,
+        "compression_ratio": round(orig_len / summ_len, 2) if summ_len > 0 else 0,
+        "requested_length": {
+            "max_words": request_params.get('max_words', 150),
+            "min_words": request_params.get('min_words', 50),
+            "request_fulfilled": summ_len <= request_params.get('max_words', 150) and 
+                               summ_len >= request_params.get('min_words', 50)
+        }
+    }
