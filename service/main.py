@@ -1,5 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi import Form 
+from typing import Optional
 import os
 import tempfile
 from schemas import SummarizationRequest, SummarizationResponse
@@ -47,55 +49,55 @@ async def summarize_from_text(request: SummarizationRequest):
             raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/summarize/file", response_model=SummarizationResponse)
-async def summarize_from_file(
+async def api_summarize_file(
     file: UploadFile = File(...),
-    max_words: int = 150,
-    min_words: int = 50,
-    do_sample: bool = False
+    max_words: int = Form(150),
+    min_words: int = Form(50),
+    do_sample: bool = Form(False),
+    length_penalty: float = Form(0.8),
+    num_beams: int = Form(4),
+    no_repeat_ngram_size: int = Form(2),
+    temperature: Optional[float] = Form(None)
 ):
-    """Суммаризирует текст из файла с контролем длины в словах"""
     if not file.filename.lower().endswith('.txt'):
-        raise HTTPException(
-            status_code=400,
-            detail="Поддерживаются только текстовые файлы (.txt)"
-        )
+        raise HTTPException(400, "Только .txt файлы поддерживаются")
     
-    temp_file_path = None
+    temp_path = None
     try:
-        # Создаем временный файл
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as temp_file:
-            content = await file.read()
-            temp_file.write(content)
-            temp_file_path = temp_file.name
+        # Читаем содержимое файла напрямую без временного файла
+        content = await file.read()
+        text = content.decode('utf-8')
         
-        # Обрабатываем файл
-        original_text, summary = process_file(
-            temp_file_path,
+        summary = summarize_text(
+            text=text,
             max_words=max_words,
             min_words=min_words,
-            do_sample=do_sample
+            do_sample=do_sample,
+            length_penalty=length_penalty,
+            num_beams=num_beams,
+            no_repeat_ngram_size=no_repeat_ngram_size,
+            temperature=temperature
         )
         
         metrics = calculate_metrics(
-            original=original_text,
+            original=text,
             summary=summary,
-            request_params={
-                "max_words": max_words,
-                "min_words": min_words
+            params={
+                'max_words': max_words,
+                'min_words': min_words,
+                'length_penalty': length_penalty,
+                'num_beams': num_beams,
+                'no_repeat_ngram_size': no_repeat_ngram_size,
+                'temperature': temperature
             }
         )
-        return SummarizationResponse(
-            summary=summary,
-            original_length=metrics["original_length"],
-            summary_length=metrics["summary_length"],
-            compression_ratio=metrics["compression_ratio"],
-            requested_length=metrics["requested_length"]
-        )
+        
+        return SummarizationResponse(**metrics)
+    
+    except UnicodeDecodeError:
+        raise HTTPException(400, "Ошибка декодирования файла. Убедитесь, что файл в UTF-8")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if temp_file_path and os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
+        raise HTTPException(500, f"Ошибка обработки файла: {str(e)}")
 
 @app.get("/health")
 async def health_check():
