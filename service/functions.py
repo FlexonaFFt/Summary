@@ -93,7 +93,7 @@ def detect_language(text: str) -> str:
     return 'ru' if cyrillic_count > len(text) * 0.3 else 'en'
 
 class TextSummarizer:
-    def __init__(self, model_path: str = "../updated_model"):
+    def __init__(self, model_path: str = "../middle_model"):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.tokenizer = T5Tokenizer.from_pretrained(
             "cointegrated/rut5-small", 

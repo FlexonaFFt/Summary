@@ -81,7 +81,7 @@ async def summarize_long_file(file_id: str):
         summary = summarizer.summarize_long_text(
             text=text,
             max_length=256,
-            min_length=30
+            min_length=125
         )
         
         return {
