@@ -1,115 +1,119 @@
+import os
+from pathlib import Path
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
-from fastapi import Form 
-from typing import Optional
-import os
-import tempfile
-from schemas import SummarizationRequest, SummarizationResponse
-from functions import summarize_text, process_file, calculate_metrics
-
-app = FastAPI(
-    title="Word-Based Text Summarization API",
-    description="API для суммаризации текстов с контролем длины в словах",
-    version="2.0.0"
+from functions import (
+    generate_file_id,
+    extract_text_from_file,
+    save_extracted_text,
+    get_text_by_file_id,
+    TextSummarizer
 )
+from schemas import UploadResponse, SummarizeResponse, SummarizationRequest
 
-@app.post("/summarize/text", response_model=SummarizationResponse)
-async def summarize_from_text(request: SummarizationRequest):
-    """Суммаризирует текст с контролем длины в словах"""
-    if not request.text and not request.file_path:
-        raise HTTPException(
-            status_code=400,
-            detail="Необходимо предоставить текст или путь к файлу"
-        )
-    
-    if request.text:
-        try:
-            summary = summarize_text(
-                text=request.text,
-                max_words=request.max_words,
-                min_words=request.min_words,
-                do_sample=request.do_sample
-            )
-            metrics = calculate_metrics(
-                original=request.text,
-                summary=summary,
-                request_params={
-                    "max_words": request.max_words,
-                    "min_words": request.min_words
-                }
-            )
-            return SummarizationResponse(
-                summary=summary,
-                original_length=metrics["original_length"],
-                summary_length=metrics["summary_length"],
-                compression_ratio=metrics["compression_ratio"],
-                requested_length=metrics["requested_length"]
-            )
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+app = FastAPI(title="Text Summarization API")
+UPLOAD_DIR = "uploads"
+summarizer = TextSummarizer()
 
-@app.post("/summarize/file", response_model=SummarizationResponse)
-async def api_summarize_file(
-    file: UploadFile = File(...),
-    max_words: int = Form(150),
-    min_words: int = Form(50),
-    do_sample: bool = Form(False),
-    length_penalty: float = Form(0.8),
-    num_beams: int = Form(4),
-    no_repeat_ngram_size: int = Form(2),
-    temperature: Optional[float] = Form(None)
-):
-    if not file.filename.lower().endswith('.txt'):
-        raise HTTPException(400, "Только .txt файлы поддерживаются")
+@app.post("/upload/", response_model=UploadResponse)
+async def upload_file(file: UploadFile = File(...)):
+    if not file:
+        raise HTTPException(status_code=400, detail="No file provided")
     
-    temp_path = None
+    # Ограничение размера файла (например, 15 МБ)
+    max_file_size = 15 * 1024 * 1024  # 15 MB
+    file_size = 0
+    for chunk in file.file:
+        file_size += len(chunk)
+        if file_size > max_file_size:
+            raise HTTPException(status_code=400, detail="File size exceeds 10 MB limit")
+    file.file.seek(0)  # Сбросить указатель файла после подсчета размера
+    
+    # Проверка поддерживаемых расширений
+    allowed_extensions = [".txt", ".md", ".csv", ".docx", ".pdf"]
+    file_extension = Path(file.filename).suffix.lower()
+    if file_extension not in allowed_extensions:
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: {file_extension}")
+    
     try:
-        # Читаем содержимое файла напрямую без временного файла
-        content = await file.read()
-        text = content.decode('utf-8')
+        file_id = generate_file_id()
+        extracted_text = extract_text_from_file(file)
+        if extracted_text.startswith("Error"):
+            raise HTTPException(status_code=400, detail=extracted_text)
+        text_file_path = save_extracted_text(extracted_text, file_id, UPLOAD_DIR)
         
-        summary = summarize_text(
-            text=text,
-            max_words=max_words,
-            min_words=min_words,
-            do_sample=do_sample,
-            length_penalty=length_penalty,
-            num_beams=num_beams,
-            no_repeat_ngram_size=no_repeat_ngram_size,
-            temperature=temperature
+        return UploadResponse(
+            file_id=file_id,
+            filename=file.filename,
+            extracted_text=extracted_text,
+            success=True,
+            message="File uploaded and processed successfully"
         )
-        
-        metrics = calculate_metrics(
-            original=text,
-            summary=summary,
-            params={
-                'max_words': max_words,
-                'min_words': min_words,
-                'length_penalty': length_penalty,
-                'num_beams': num_beams,
-                'no_repeat_ngram_size': no_repeat_ngram_size,
-                'temperature': temperature
-            }
-        )
-        
-        return SummarizationResponse(**metrics)
-    
-    except UnicodeDecodeError:
-        raise HTTPException(400, "Ошибка декодирования файла. Убедитесь, что файл в UTF-8")
     except Exception as e:
-        raise HTTPException(500, f"Ошибка обработки файла: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
-@app.get("/health")
-async def health_check():
-    """Проверка работоспособности сервиса"""
-    return {
-        "status": "ok",
-        "details": {
-            "model_loaded": _model is not None if '_model' in globals() else False,
-            "service": "word-based summarization"
+@app.get("/")
+async def root():
+    return {"message": "Text Summarization API is running"}
+
+@app.get("/summarize/{file_id}", response_model=SummarizeResponse)
+async def summarize_file(file_id: str, max_length: int = 150):
+    try:
+        text = get_text_by_file_id(file_id, UPLOAD_DIR)
+        summary = summarizer.summarize(text, max_length=max_length)
+        
+        return SummarizeResponse(
+            file_id=file_id,
+            summary=summary,
+            success=True,
+            message="Text successfully summarized"
+        )
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error summarizing text: {str(e)}")
+
+@app.post("/summarize/long/{file_id}")
+async def summarize_long_file(file_id: str):
+
+    try:
+        text = get_text_by_file_id(file_id, UPLOAD_DIR)
+        summary = summarizer.summarize_long_text(
+            text=text,
+            max_length=256,
+            min_length=125
+        )
+        
+        return {
+            "file_id": file_id,
+            "summary": summary,
+            "success": True
         }
-    }
+        
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"File with ID {file_id} not found"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Summarization error: {str(e)}"
+        )
+
+@app.post("/summarize/long")
+async def summarize_long_text(request: SummarizationRequest):
+    try:
+        summary = summarizer.summarize_long_text(
+            text=request.text,
+            max_length=request.max_length,
+            min_length=request.min_length
+        )
+        return {"summary": summary}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
     uvicorn.run(app, host="0.0.0.0", port=8000)
