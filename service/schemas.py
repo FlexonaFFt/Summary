@@ -22,4 +22,3 @@ class SummarizationRequest(BaseModel):
     text: str
     max_length: int = 256
     min_length: int = 30
-
