@@ -19,61 +19,46 @@
   padding: 0;
 }
 
-body {
+html, body, #root {
+  width: 100%;
+  height: 100%;
   margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+body {
   display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
   background-color: #121212;
 }
 
 #root {
-  max-width: 1280px;
   width: 100%;
+  height: 100%;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 100vh;
+  justify-content: space-between;
+  min-height: 100%;
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .logo-container {
-  margin-bottom: 4rem;
-}
-
-.logo {
-  width: 60px;
-  height: 60px;
-  margin: 0 auto;
-  position: relative;
-}
-
-.logo-top {
-  position: absolute;
-  top: 0;
-  width: 100%;
-  height: 60%;
-  background: linear-gradient(to top, #ff4500, #ffd700);
-  clip-path: polygon(0 100%, 20% 100%, 20% 60%, 40% 60%, 40% 40%, 60% 40%, 60% 60%, 80% 60%, 80% 100%, 100% 100%, 100% 0, 0 0);
-}
-
-.logo-bottom {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 40%;
-  background: #ff0000;
-  clip-path: polygon(20% 0, 80% 0, 80% 50%, 100% 50%, 100% 100%, 0 100%, 0 50%, 20% 50%);
+  margin-bottom: 2rem;
+  flex-shrink: 0;
 }
 
 .content-container {
@@ -204,11 +189,16 @@ h2 {
   width: 20px;
   height: 20px;
   color: #121212;
-  fill: none;
   stroke: currentColor;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.send-icon-text {
+  font-size: 18px;
+  color: #121212;
+  line-height: 1;
 }
 
 .send-button {
@@ -218,14 +208,14 @@ h2 {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background-color: #ffd700;
+  background-color: #4da6ff; /* Нежно-голубой цвет */
   border: none;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .send-button:hover {
-  background-color: #ffcc00;
+  background-color: #3399ff; /* Немного темнее при наведении */
 }
 
 .send-button:disabled {
@@ -233,7 +223,7 @@ h2 {
   cursor: not-allowed;
 }
 
-.send-button:disabled .send-icon {
+.send-button:disabled .send-icon-text {
   color: rgba(255, 255, 255, 0.3);
 }
 

@@ -10,11 +10,9 @@ function App() {
   const initTextareaResize = useRef<() => void>()
 
   useEffect(() => {
-    // Сохраняем функцию инициализации для повторного использования
     initTextareaResize.current = setupTextareaAutosize();
   }, []);
 
-  // Эффект для обновления высоты при изменении текста
   useEffect(() => {
     if (initTextareaResize.current) {
       initTextareaResize.current();
@@ -29,8 +27,8 @@ function App() {
     setIsLoading(true)
     
     try {
-      // Здесь будет запрос к вашему API для суммаризации
-      // Пример заглушки для демонстрации:
+      // Здесь будет запрос к API для суммаризации
+      // заглушка
       setTimeout(() => {
         setSummary(`Это пример суммаризации текста: "${inputText.substring(0, 50)}..."`);
         setIsLoading(false);
@@ -69,6 +67,16 @@ function App() {
     setInputText(e.target.value);
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Отправка формы по нажатию Enter без Shift
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (inputText.trim() && !isLoading) {
+        handleSubmit(e as unknown as React.FormEvent);
+      }
+    }
+  };
+
   return (
     <div className="app-container">
       <div className="logo-container">
@@ -101,6 +109,7 @@ function App() {
               ref={textareaRef}
               value={inputText}
               onChange={handleTextareaChange}
+              onKeyDown={handleKeyDown}
               placeholder="Введите текст для суммаризации..."
               className="modern-input"
               rows={1}
@@ -125,10 +134,7 @@ function App() {
                 {isLoading ? (
                   <div className="loading-spinner"></div>
                 ) : (
-                  <svg className="send-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M22 2L11 13" />
-                    <path d="M22 2L15 22L11 13L2 9L22 2Z" />
-                  </svg>
+                  <span className="send-icon-text">➤</span>
                 )}
               </button>
             </div>
