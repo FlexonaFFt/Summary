@@ -102,8 +102,9 @@ body {
   display: flex;
   width: 100%;
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: 12px;
   animation: fadeIn 0.3s ease-in-out;
+  align-items: flex-start; 
 }
 
 @keyframes fadeIn {
@@ -131,6 +132,8 @@ body {
   margin-right: 12px;
   flex-shrink: 0;
   font-size: 1.2rem;
+  position: sticky; 
+  top: 1rem; 
 }
 
 .message-content {
@@ -141,6 +144,9 @@ body {
   line-height: 1.6;
   font-size: 1rem;
   color: rgba(255, 255, 255, 0.9);
+  display: flex; 
+  align-items: center;
+  min-height: 36px; 
 }
 
 /* Индикатор печати */
