@@ -3,11 +3,26 @@ import { setupTextareaAutosize } from './utils/textareaAutoResize'
 import TypewriterText from './components/TypewriterText'
 import './App.css'
 
+// Добавим новый тип сообщения
+type MessageType = 'user' | 'model' | 'file';
+
+// Обновим интерфейс сообщения
+interface Message {
+  type: MessageType;
+  text: string;
+  fileInfo?: {
+    name: string;
+    size: number;
+    type: string;
+  };
+}
+
 function App() {
   const [inputText, setInputText] = useState('')
-  const [messages, setMessages] = useState<Array<{type: 'user' | 'model', text: string}>>([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
+  const [activeFile, setActiveFile] = useState<File | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const initTextareaResize = useRef<() => void>()
@@ -77,14 +92,86 @@ function App() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setInputText(event.target.result as string);
+  
+    // Сохраняем файл для дальнейшей обработки
+    setActiveFile(file);
+  
+    // Добавляем сообщение о загрузке файла в чат с упрощенным текстом
+    setMessages(prev => [...prev, { 
+      type: 'file', 
+      text: `Вами был загружен файл ${file.name} для суммаризации`,
+      fileInfo: {
+        name: file.name,
+        size: file.size,
+        type: file.type
       }
-    };
-    reader.readAsText(file);
+    }]);
+  
+    // Автоматически отправляем запрос на суммаризацию файла
+    handleFileSubmit(file);
+  }
+
+  const handleFileSubmit = async (file: File) => {
+    setIsLoading(true);
+    
+    try {
+      // Здесь будет логика отправки файла на сервер
+      // Пример заглушки для демонстрации:
+      setTimeout(() => {
+        const modelResponse = `Это пример суммаризации файла "${file.name}". Документ содержит информацию о...`;
+        setIsLoading(false);
+        setIsTyping(true);
+        // Добавляем сообщение модели в чат
+        setMessages(prev => [...prev, { type: 'model', text: modelResponse }]);
+      }, 1500);
+      
+      // Реальный запрос будет выглядеть примерно так:
+      // const formData = new FormData();
+      // formData.append('file', file);
+      // const response = await fetch('ваш_api_endpoint/upload', {
+      //   method: 'POST',
+      //   body: formData
+      // });
+      // const data = await response.json();
+      // setIsTyping(true);
+      // setMessages(prev => [...prev, { type: 'model', text: data.summary }]);
+    } catch (error) {
+      console.error('Ошибка при обработке файла:', error);
+      setIsTyping(true);
+      setMessages(prev => [...prev, { 
+        type: 'model', 
+        text: 'Произошла ошибка при обработке файла. Пожалуйста, попробуйте снова.' 
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // Функции для кнопок под ответом модели
+  const handleContinueSummarization = () => {
+    if (!activeFile) return;
+    
+    setIsLoading(true);
+    
+    // Здесь будет логика запроса продолжения суммаризации
+    setTimeout(() => {
+      const modelResponse = `Продолжение суммаризации файла "${activeFile.name}". Дополнительно можно отметить, что...`;
+      setIsLoading(false);
+      setIsTyping(true);
+      setMessages(prev => [...prev, { type: 'model', text: modelResponse }]);
+    }, 1500);
+  }
+
+  const handleAskQuestion = () => {
+    if (!activeFile) return;
+    
+    // Показываем поле ввода с подсказкой для вопроса
+    setInputText('');
+    // Можно добавить специальную подсказку
+    if (textareaRef.current) {
+      textareaRef.current.placeholder = `Задайте вопрос по файлу "${activeFile.name}"...`;
+      textareaRef.current.focus();
+    }
   }
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -117,24 +204,47 @@ function App() {
             <p>Введите текст для суммаризации или загрузите файл</p>
           </div>
         ) : (
-          messages.map((message, index) => (
-            <div key={index} className={`message ${message.type}-message`}>
-              <div className="message-avatar">
-                {message.type === 'user' ? '👤' : '🤖'}
+          <>
+            {messages.map((message, index) => (
+              <div key={index} className={`message ${message.type}-message`}>
+                <div className="message-avatar">
+                  {message.type === 'user' ? '👤' : message.type === 'file' ? '📄' : '🤖'}
+                </div>
+                <div className="message-content">
+                  {message.type === 'model' && index === messages.length - 1 && isTyping ? (
+                    <TypewriterText 
+                      text={message.text} 
+                      speed={20} 
+                      onComplete={() => setIsTyping(false)} 
+                    />
+                  ) : (
+                    message.text
+                  )}
+                </div>
               </div>
-              <div className="message-content">
-                {message.type === 'model' && index === messages.length - 1 && isTyping ? (
-                  <TypewriterText 
-                    text={message.text} 
-                    speed={20} 
-                    onComplete={() => setIsTyping(false)} 
-                  />
-                ) : (
-                  message.text
-                )}
+            ))}
+            
+            {/* Кнопки действий под последним ответом модели */}
+            {messages.length > 0 && 
+             messages[messages.length - 1].type === 'model' && 
+             !isTyping && 
+             activeFile && (
+              <div className="model-actions">
+                <button 
+                  className="action-button"
+                  onClick={handleContinueSummarization}
+                >
+                  Продолжить суммаризацию
+                </button>
+                <button 
+                  className="action-button"
+                  onClick={handleAskQuestion}
+                >
+                  Задать вопрос по файлу
+                </button>
               </div>
-            </div>
-          ))
+            )}
+          </>
         )}
         {isLoading && (
           <div className="message model-message">
@@ -191,6 +301,20 @@ function App() {
       </div>
     </div>
   )
+}
+
+// Вспомогательные функции
+function getFileIcon(fileType: string): string {
+  if (fileType.includes('pdf')) return 'PDF';
+  if (fileType.includes('word') || fileType.includes('docx')) return 'DOC';
+  if (fileType.includes('text')) return 'TXT';
+  return 'FILE';
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
 export default App
