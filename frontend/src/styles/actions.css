@@ -31,3 +31,26 @@
   transform: translateY(1px);
   box-shadow: none;
 }
+
+/* Стили для разделителя с текстом */
+.action-divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 16px 0;
+  padding: 0 10px;
+}
+
+.divider-line {
+  flex-grow: 1;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.divider-text {
+  padding: 0 12px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  font-weight: 500;
+}

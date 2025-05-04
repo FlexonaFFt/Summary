@@ -3,10 +3,9 @@ import { setupTextareaAutosize } from './utils/textareaAutoResize'
 import TypewriterText from './components/TypewriterText'
 import './styles/index.css'
 
-// Добавим новый тип сообщения
 type MessageType = 'user' | 'model' | 'file';
+type ActionType = 'continue' | 'question' | null;
 
-// Обновим интерфейс сообщения
 interface Message {
   type: MessageType;
   text: string;
@@ -23,67 +22,92 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [activeFile, setActiveFile] = useState<File | null>(null)
+  const [activeAction, setActiveAction] = useState<ActionType>(null)
+  const [messagesAfterAction, setMessagesAfterAction] = useState<Message[]>([])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const initTextareaResize = useRef<() => void>()
 
   useEffect(() => {
-    // Сохраняем функцию инициализации для повторного использования
     initTextareaResize.current = setupTextareaAutosize();
   }, []);
 
-  // Эффект для обновления высоты при изменении текста
   useEffect(() => {
     if (initTextareaResize.current) {
       initTextareaResize.current();
     }
   }, [inputText]);
 
-  // Прокрутка чата вниз при добавлении новых сообщений
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [messages, isTyping]);
+  }, [messages, messagesAfterAction, isTyping]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!inputText.trim() || isLoading || isTyping) return
-    
-    // Добавляем сообщение пользователя в чат
     const userMessage = inputText.trim();
-    setMessages(prev => [...prev, { type: 'user', text: userMessage }]);
+    
+    if (activeAction) {
+      setMessagesAfterAction(prev => [...prev, { type: 'user', text: userMessage }]);
+    } else {
+      setMessages(prev => [...prev, { type: 'user', text: userMessage }]);
+    }
+    
     setInputText('');
     setIsLoading(true);
     
     try {
-      // Здесь будет запрос к вашему API для суммаризации
-      // Пример заглушки для демонстрации:
-      setTimeout(() => {
-        const modelResponse = `Это пример суммаризации текста: "${userMessage.substring(0, 50)}..."`;
-        setIsLoading(false);
-        setIsTyping(true);
-        // Добавляем сообщение модели в чат
-        setMessages(prev => [...prev, { type: 'model', text: modelResponse }]);
-      }, 1000);
+      if (activeAction === 'question' && activeFile) {
+        setTimeout(() => {
+          const modelResponse = `Ответ на ваш вопрос "${userMessage}" по файлу "${activeFile.name}": ...`;
+          setIsLoading(false);
+          setIsTyping(true);
+          setMessagesAfterAction(prev => [...prev, { type: 'model', text: modelResponse }]);
+        }, 1500);
+      } else {
+        setTimeout(() => {
+          const modelResponse = `Это пример суммаризации текста: "${userMessage.substring(0, 50)}..."`;
+          setIsLoading(false);
+          setIsTyping(true);
+          
+          if (activeAction) {
+            setMessagesAfterAction(prev => [...prev, { type: 'model', text: modelResponse }]);
+          } else {
+            setMessages(prev => [...prev, { type: 'model', text: modelResponse }]);
+          }
+        }, 1000);
+      }
       
       // Реальный запрос будет выглядеть примерно так:
       // const response = await fetch('ваш_api_endpoint', {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ text: userMessage })
+      //   body: JSON.stringify({ 
+      //     text: userMessage,
+      //     fileId: activeFile?.name,
+      //     actionType: activeAction
+      //   })
       // });
       // const data = await response.json();
       // setIsTyping(true);
       // setMessages(prev => [...prev, { type: 'model', text: data.summary }]);
     } catch (error) {
-      console.error('Ошибка при получении суммаризации:', error);
+      console.error('Ошибка при получении ответа:', error);
       setIsTyping(true);
-      setMessages(prev => [...prev, { 
-        type: 'model', 
-        text: 'Произошла ошибка при обработке текста. Пожалуйста, попробуйте снова.' 
-      }]);
+      
+      const errorMessage = { 
+        type: 'model' as MessageType, 
+        text: 'Произошла ошибка при обработке запроса. Пожалуйста, попробуйте снова.' 
+      };
+      
+      if (activeAction) {
+        setMessagesAfterAction(prev => [...prev, errorMessage]);
+      } else {
+        setMessages(prev => [...prev, errorMessage]);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -93,10 +117,9 @@ function App() {
     const file = e.target.files?.[0];
     if (!file) return;
   
-    // Сохраняем файл для дальнейшей обработки
+    setActiveAction(null);
+    setMessagesAfterAction([]);
     setActiveFile(file);
-  
-    // Добавляем сообщение о загрузке файла в чат с упрощенным текстом
     setMessages(prev => [...prev, { 
       type: 'file', 
       text: `Вами был загружен файл ${file.name} для суммаризации`,
@@ -107,7 +130,6 @@ function App() {
       }
     }]);
   
-    // Автоматически отправляем запрос на суммаризацию файла
     handleFileSubmit(file);
   }
 
@@ -115,13 +137,10 @@ function App() {
     setIsLoading(true);
     
     try {
-      // Здесь будет логика отправки файла на сервер
-      // Пример заглушки для демонстрации:
       setTimeout(() => {
         const modelResponse = `Это пример суммаризации файла "${file.name}". Документ содержит информацию о...`;
         setIsLoading(false);
         setIsTyping(true);
-        // Добавляем сообщение модели в чат
         setMessages(prev => [...prev, { type: 'model', text: modelResponse }]);
       }, 1500);
       
@@ -146,48 +165,45 @@ function App() {
       setIsLoading(false);
     }
   }
-
-  // Функции для кнопок под ответом модели
+  
   const handleContinueSummarization = () => {
     if (!activeFile) return;
     
+    setActiveAction('continue');
+    
     setIsLoading(true);
     
-    // Здесь будет логика запроса продолжения суммаризации
     setTimeout(() => {
       const modelResponse = `Продолжение суммаризации файла "${activeFile.name}". Дополнительно можно отметить, что...`;
       setIsLoading(false);
       setIsTyping(true);
-      setMessages(prev => [...prev, { type: 'model', text: modelResponse }]);
+      setMessagesAfterAction(prev => [...prev, { type: 'model', text: modelResponse }]);
     }, 1500);
   }
 
   const handleAskQuestion = () => {
     if (!activeFile) return;
     
-    // Показываем поле ввода с подсказкой для вопроса
+    setActiveAction('question');
+    
     setInputText('');
-    // Можно добавить специальную подсказку
     if (textareaRef.current) {
       textareaRef.current.placeholder = `Задайте вопрос по файлу "${activeFile.name}"...`;
       textareaRef.current.focus();
     }
   }
-
+  
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
-  }
-
+  };
+  
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Отправка формы по нажатию Enter без Shift
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (inputText.trim() && !isLoading && !isTyping) {
-        handleSubmit(e as unknown as React.FormEvent);
-      }
+      handleSubmit(e as unknown as React.FormEvent);
     }
   };
-
+  
   return (
     <div className="app-container">
       <div className="logo-container">
@@ -211,7 +227,7 @@ function App() {
                   {message.type === 'user' ? '👤' : message.type === 'file' ? '📄' : '🤖'}
                 </div>
                 <div className="message-content">
-                  {message.type === 'model' && index === messages.length - 1 && isTyping ? (
+                  {message.type === 'model' && index === messages.length - 1 && isTyping && !activeAction ? (
                     <TypewriterText 
                       text={message.text} 
                       speed={20} 
@@ -224,11 +240,11 @@ function App() {
               </div>
             ))}
             
-            {/* Кнопки действий под последним ответом модели */}
             {messages.length > 0 && 
              messages[messages.length - 1].type === 'model' && 
              !isTyping && 
-             activeFile && (
+             activeFile && 
+             !activeAction && (
               <div className="model-actions">
                 <button 
                   className="action-button"
@@ -244,6 +260,35 @@ function App() {
                 </button>
               </div>
             )}
+            
+            {activeAction && (
+              <div className="action-divider">
+                <div className="divider-line"></div>
+                <div className="divider-text">
+                  {activeAction === 'continue' ? 'Продолжение суммаризации' : 'Вопрос по файлу'}
+                </div>
+                <div className="divider-line"></div>
+              </div>
+            )}
+            
+            {messagesAfterAction.map((message, index) => (
+              <div key={`after-${index}`} className={`message ${message.type}-message`}>
+                <div className="message-avatar">
+                  {message.type === 'user' ? '👤' : message.type === 'file' ? '📄' : '🤖'}
+                </div>
+                <div className="message-content">
+                  {message.type === 'model' && index === messagesAfterAction.length - 1 && isTyping ? (
+                    <TypewriterText 
+                      text={message.text} 
+                      speed={20} 
+                      onComplete={() => setIsTyping(false)} 
+                    />
+                  ) : (
+                    message.text
+                  )}
+                </div>
+              </div>
+            ))}
           </>
         )}
         {isLoading && (
