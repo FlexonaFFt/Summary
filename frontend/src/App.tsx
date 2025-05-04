@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { setupTextareaAutosize } from './utils/textareaAutoResize'
 import TypewriterText from './components/TypewriterText'
-import './App.css'
+import './styles/index.css'
 
 // Добавим новый тип сообщения
 type MessageType = 'user' | 'model' | 'file';

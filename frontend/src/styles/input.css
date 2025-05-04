@@ -1,0 +1,95 @@
+/* Улучшенный стиль для поля ввода */
+.input-wrapper {
+  width: 100%;
+  max-width: 700px;
+  position: relative;
+  margin-top: auto;
+}
+
+.input-form {
+  display: flex;
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  background-color: #2d2d2d;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.modern-input {
+  width: 100%;
+  padding: 16px 100px 16px 16px;
+  background-color: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 1rem;
+  resize: none;
+  outline: none;
+  min-height: 56px;
+  max-height: 200px;
+  overflow-y: auto;
+  line-height: 1.5;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.modern-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.input-actions {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.send-icon-text {
+  font-size: 18px;
+  color: #121212;
+  line-height: 1;
+}
+
+.send-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: #4da6ff; /* Нежно-голубой цвет */
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.send-button:hover {
+  background-color: #3399ff; /* Немного темнее при наведении */
+}
+
+.send-button:disabled {
+  background-color: rgba(255, 255, 255, 0.1);
+  cursor: not-allowed;
+}
+
+.send-button:disabled .send-icon-text {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #121212;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Автоматическое изменение высоты текстового поля */
+.modern-input {
+  overflow-y: auto;
+  transition: height 0.2s;
+  height: auto;
+}
