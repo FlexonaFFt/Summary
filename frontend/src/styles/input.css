@@ -93,3 +93,55 @@
   transition: height 0.2s;
   height: auto;
 }
+
+/* Стили для светлой темы */
+[data-theme="light"] .input-form {
+  background-color: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .modern-input {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+[data-theme="light"] .modern-input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .send-button {
+  background-color: rgba(77, 166, 255, 0.8);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+[data-theme="light"] .send-button:hover {
+  background-color: rgba(51, 153, 255, 0.9);
+}
+
+[data-theme="light"] .send-icon-text {
+  color: #ffffff;
+}
+
+[data-theme="light"] .send-button:disabled {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .send-button:disabled .send-icon-text {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .loading-spinner {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+}
+
+[data-theme="light"] .file-upload-label:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .attachment-icon {
+  color: rgba(0, 0, 0, 0.6);
+}

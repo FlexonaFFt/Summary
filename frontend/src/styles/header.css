@@ -1,153 +1,152 @@
 /* Стили для хедера */
 .app-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-  z-index: 1000;
-  background-color: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-/* Стили для кнопок хедера */
-.header-button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.3);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.header-button:hover {
-  background-color: rgba(255, 255, 255, 0.5);
-}
-
-.header-button svg {
-  width: 24px;
-  height: 24px;
-  color: #333;
-}
-
-/* Стили для темной темы */
-[data-theme="dark"] .app-header {
-  background-color: rgba(30, 30, 30, 0.2);
-}
-
-[data-theme="dark"] .header-button {
-  background-color: rgba(50, 50, 50, 0.3);
-}
-
-[data-theme="dark"] .header-button:hover {
-  background-color: rgba(70, 70, 70, 0.5);
-}
-
-[data-theme="dark"] .header-button svg {
-  color: #eee;
-}
-
-/* Стили для бокового меню */
-.side-menu {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 250px;
-  background-color: #fff;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 1001;
-  transform: translateX(0);
-  transition: transform 0.3s ease;
-}
-
-.menu-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.close-menu {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-.menu-items {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.menu-items li {
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-}
-
-.menu-items li:hover {
-  background-color: #f5f5f5;
-}
-
-/* Темная тема для меню */
-[data-theme="dark"] .side-menu {
-  background-color: #222;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
-}
-
-[data-theme="dark"] .menu-header {
-  border-bottom: 1px solid #333;
-}
-
-[data-theme="dark"] .menu-items li {
-  border-bottom: 1px solid #333;
-  color: #eee;
-}
-
-[data-theme="dark"] .menu-items li:hover {
-  background-color: #333;
-}
-
-[data-theme="dark"] .close-menu {
-  color: #eee;
-}
-
-/* Основные стили для темной темы */
-[data-theme="dark"] {
-  color-scheme: dark;
-}
-
-[data-theme="dark"] .app-container {
-  background-color: #121212;
-  color: #eee;
-}
-
-[data-theme="dark"] .message {
-  background-color: #2a2a2a;
-}
-
-[data-theme="dark"] .user-message {
-  background-color: #1e3a8a;
-}
-
-[data-theme="dark"] .modern-input {
-  background-color: #333;
-  color: #eee;
-  border: 1px solid #555;
-}
-
-[data-theme="dark"] .send-button {
-  background-color: #1e3a8a;
-}
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 1000;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  /* Стили для кнопок хедера */
+  .header-button {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .header-button:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .header-button svg {
+    width: 16px;
+    height: 16px;
+    color: rgba(255, 255, 255, 0.3);
+  }
+  
+  /* Стили для темной темы */
+  [data-theme="dark"] .app-header {
+    background-color: #121212;
+  }
+  
+  [data-theme="dark"] .header-button {
+    background-color: rgba(50, 50, 50, 0.3);
+  }
+  
+  [data-theme="dark"] .header-button:hover {
+    background-color: rgba(70, 70, 70, 0.5);
+  }
+  
+  [data-theme="dark"] .header-button svg {
+    color: #eee;
+  }
+  
+  /* Стили для бокового меню */
+  .side-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 250px;
+    background-color: #fff;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+    transform: translateX(0);
+    transition: transform 0.3s ease;
+  }
+  
+  .menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .close-menu {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+  }
+  
+  .menu-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .menu-items li {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+  }
+  
+  .menu-items li:hover {
+    background-color: #f5f5f5;
+  }
+  
+  /* Темная тема для меню */
+  [data-theme="dark"] .side-menu {
+    background-color: #222;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  [data-theme="dark"] .menu-header {
+    border-bottom: 1px solid #333;
+  }
+  
+  [data-theme="dark"] .menu-items li {
+    border-bottom: 1px solid #333;
+    color: #eee;
+  }
+  
+  [data-theme="dark"] .menu-items li:hover {
+    background-color: #333;
+  }
+  
+  [data-theme="dark"] .close-menu {
+    color: #eee;
+  }
+  
+  /* Стили для светлой темы */
+  [data-theme="light"] {
+    color-scheme: light;
+  }
+  
+  [data-theme="light"] .app-container {
+    background-color: #ffffff;
+    color: #213547;
+  }
+  
+  [data-theme="light"] .app-header {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  [data-theme="light"] .header-button {
+    background-color: rgba(230, 230, 230, 0.3);
+  }
+  
+  [data-theme="light"] .header-button:hover {
+    background-color: rgba(200, 200, 200, 0.5);
+  }
+  
+  [data-theme="light"] .header-button svg {
+    color: #333;
+  }
+  

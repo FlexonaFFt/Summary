@@ -62,66 +62,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Стили для хедера (аналогично футеру) */
-.app-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  padding: 20px 30px;
-  display: flex;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.minimal-header {
-  pointer-events: none;
-}
-
-.header-button {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 12px;
-  padding: 0;
-  pointer-events: auto;
-}
-
-.header-button:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
-  transition: 
-      background-color 0.3s ease, 
-      box-shadow 0.3s ease;
-}
-
-.theme-toggle {
-  margin-left: auto;
-}
-
-/* Стили для светлой темы */
-[data-theme="light"] .header-button {
-  background-color: rgba(0, 0, 0, 0.1);
-  color: #333;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-}
-
-[data-theme="light"] .header-button:hover {
-  background-color: rgba(0, 0, 0, 0.2);
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="light"] .header-button svg {
-  color: #333;
-}
-
 /* Стили для бокового меню */
 .side-menu {
   position: fixed;
