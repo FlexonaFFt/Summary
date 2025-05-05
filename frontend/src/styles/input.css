@@ -59,14 +59,14 @@
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background-color: #4da6ff; /* Нежно-голубой цвет */
+  background-color: #4da6ff; 
   border: none;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .send-button:hover {
-  background-color: #3399ff; /* Немного темнее при наведении */
+  background-color: #3399ff; 
 }
 
 .send-button:disabled {

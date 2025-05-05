@@ -9,6 +9,13 @@
   padding: 1rem 0;
   margin-bottom: 1rem;
   max-height: calc(100vh - 200px);
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.chat-container::-webkit-scrollbar {
+  display: none;
 }
 
 .welcome-message {
