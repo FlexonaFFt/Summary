@@ -61,3 +61,164 @@ body {
   margin-bottom: 2rem;
   flex-shrink: 0;
 }
+
+/* Стили для хедера (аналогично футеру) */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 20px 30px;
+  display: flex;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.minimal-header {
+  pointer-events: none;
+}
+
+.header-button {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+  pointer-events: auto;
+}
+
+.header-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+  transition: 
+      background-color 0.3s ease, 
+      box-shadow 0.3s ease;
+}
+
+.theme-toggle {
+  margin-left: auto;
+}
+
+/* Стили для светлой темы */
+[data-theme="light"] .header-button {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .header-button:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .header-button svg {
+  color: #333;
+}
+
+/* Стили для бокового меню */
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 250px;
+  background-color: #1a1a1a;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+  transform: translateX(0);
+  transition: transform 0.3s ease;
+}
+
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #333;
+}
+
+.close-menu {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #eee;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+}
+
+.menu-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-items li {
+  padding: 15px 20px;
+  border-bottom: 1px solid #333;
+  cursor: pointer;
+  color: #eee;
+  text-align: left;
+}
+
+.menu-items li:hover {
+  background-color: #333;
+}
+
+/* Стили для светлой темы */
+[data-theme="light"] {
+  color-scheme: light;
+  color: #213547;
+  background-color: #ffffff;
+}
+
+[data-theme="light"] .app-header {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="light"] .header-button {
+  background-color: rgba(230, 230, 230, 0.3);
+}
+
+[data-theme="light"] .header-button:hover {
+  background-color: rgba(200, 200, 200, 0.5);
+}
+
+[data-theme="light"] .header-button svg {
+  color: #333;
+}
+
+[data-theme="light"] .side-menu {
+  background-color: #fff;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .menu-header {
+  border-bottom: 1px solid #eee;
+}
+
+[data-theme="light"] .menu-items li {
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+[data-theme="light"] .menu-items li:hover {
+  background-color: #f5f5f5;
+}
+
+[data-theme="light"] .close-menu {
+  color: #333;
+}
+
+[data-theme="light"] .app-container {
+  background-color: #ffffff;
+  color: #213547;
+}

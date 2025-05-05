@@ -5,6 +5,7 @@ import './styles/index.css'
 
 type MessageType = 'user' | 'model' | 'file';
 type ActionType = 'continue' | 'question' | null;
+type ThemeType = 'light' | 'dark';
 
 interface Message {
   type: MessageType;
@@ -24,6 +25,8 @@ function App() {
   const [activeFile, setActiveFile] = useState<File | null>(null)
   const [activeAction, setActiveAction] = useState<ActionType>(null)
   const [messagesAfterAction, setMessagesAfterAction] = useState<Message[]>([])
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [theme, setTheme] = useState<ThemeType>('light')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const initTextareaResize = useRef<() => void>()
@@ -204,8 +207,60 @@ function App() {
     }
   };
   
+  // Функция для переключения меню
+  const toggleMenu = () => {
+    setIsMenuOpen(prev => !prev);
+  };
+  
+  // Функция для переключения темы
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+  
+  // Применяем тему к документу
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+  }, [theme]);
+  
   return (
-    <div className="app-container">
+    <div className={`app-container ${theme}`}>
+      {/* Хедер с минималистичными кнопками */}
+      <header className="app-header minimal-header">
+        <button className="header-button" onClick={toggleMenu} aria-label="Открыть меню">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <button className="header-button theme-toggle" onClick={toggleTheme} aria-label="Переключить тему">
+          {theme === 'light' ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+        </button>
+      </header>
+      
+      {/* Боковое меню */}
+      {isMenuOpen && (
+        <div className="side-menu">
+          <div className="menu-header">
+            <h3>Меню</h3>
+            <button className="close-menu" onClick={toggleMenu} aria-label="Закрыть меню">×</button>
+          </div>
+          <ul className="menu-items">
+            <li>Главная</li>
+            <li>О проекте</li>
+            <li>Настройки</li>
+            <li>Помощь</li>
+          </ul>
+        </div>
+      )}
+      
       <div className="logo-container">
         <div className="logo">
           <div className="logo-top"></div>
