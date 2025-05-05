@@ -54,3 +54,12 @@
   white-space: nowrap;
   font-weight: 500;
 }
+
+/* Стили для светлой темы */
+[data-theme="light"] .divider-line {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .divider-text {
+  color: rgba(0, 0, 0, 0.6);
+}
