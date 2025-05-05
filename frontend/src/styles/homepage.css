@@ -1,0 +1,186 @@
+/* Сброс стилей для обеспечения полноэкранного режима */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.homepage-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f5f5f5;
+  padding: 40px 20px;
+  margin: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.header-container {
+  width: 100%;
+  max-width: 400px;
+  background-color: white;
+  border-radius: 50px;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-top: 20px;
+}
+
+.logo-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.cta-button-small {
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.tabs-container {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  background-color: white;
+  border-radius: 50px;
+  padding: 10px 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin: 20px 0;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #777;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.tab-button.active {
+  color: #333;
+  font-weight: 500;
+  position: relative;
+  border-bottom: 2px solid #333;
+}
+
+.hero-section {
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+  margin: 0;
+  padding: 20px 0;
+}
+
+.hero-title {
+  font-size: 32px;
+  font-weight: 500;
+  color: #333;
+  margin: 10px 0;
+  line-height: 1.2;
+}
+
+.image-section {
+  width: 100%;
+  max-width: 800px;
+  height: 200px;
+  margin: 20px 0;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(45deg, #4da6ff, #6a8fff);
+  border-radius: 12px;
+  filter: blur(2px);
+  opacity: 0.8;
+}
+
+.cta-section {
+  margin: 20px 0;
+}
+
+.cta-button {
+  background-color: white;
+  color: #333;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.cta-button:hover {
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 24px;
+  }
+  
+  .tabs-container {
+    gap: 10px;
+  }
+  
+  .homepage-container {
+    padding: 20px 10px;
+  }
+}
+
+/* Стили для светлой/темной темы */
+[data-theme="dark"] .homepage-container {
+  background-color: #121212;
+}
+
+[data-theme="dark"] .header-container,
+[data-theme="dark"] .tabs-container,
+[data-theme="dark"] .cta-button {
+  background-color: #1e1e1e;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .logo-text,
+[data-theme="dark"] .hero-title,
+[data-theme="dark"] .tab-button.active {
+  color: #fff;
+}
+
+[data-theme="dark"] .tab-button {
+  color: #aaa;
+}
+
+[data-theme="dark"] .tab-button.active {
+  border-bottom-color: #fff;
+}
