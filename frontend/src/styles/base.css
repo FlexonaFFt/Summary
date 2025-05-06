@@ -117,7 +117,7 @@ body {
 [data-theme="light"] {
   color-scheme: light;
   color: #213547;
-  background-color: #ffffff;
+  background-color: #f5f7fa; 
 }
 
 [data-theme="light"] .app-header {
@@ -159,6 +159,6 @@ body {
 }
 
 [data-theme="light"] .app-container {
-  background-color: #ffffff;
+  background-color: #f5f7fa; 
   color: #213547;
 }

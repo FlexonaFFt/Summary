@@ -15,45 +15,51 @@
     -webkit-backdrop-filter: blur(10px);
   }
   
-  /* Стили для кнопок хедера */
+  /* Стили для кнопок в хедере */
   .header-button {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: none;
-    background-color: rgba(255, 255, 255, 0.3);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
     cursor: pointer;
-    transition: background-color 0.3s ease;
   }
   
-  .header-button:hover {
-    background-color: rgba(255, 255, 255, 0.5);
+  /* Светлая тема */
+  [data-theme="light"] .header-button {
+    background-color: #f0f2f5;
+    border: 1px solid #e0e3e8;
+    color: #4a5568;
   }
   
-  .header-button svg {
-    width: 16px;
-    height: 16px;
-    color: rgba(255, 255, 255, 0.3);
+  [data-theme="light"] .header-button:hover {
+    background-color: #e5e8ec;
+    border-color: #d0d4d9;
+  }
+  
+  /* Тёмная тема */
+  [data-theme="dark"] .header-button {
+    background-color: #2d2d2d;
+    border: 1px solid #3d3d3d;
+    color: #e0e0e0;
+  }
+  
+  [data-theme="dark"] .header-button:hover {
+    background-color: #363636;
+    border-color: #4d4d4d;
+  }
+  
+  /* Активное состояние для меню */
+  .header-button.active {
+    background-color: var(--primary-color-light);
+    border-color: var(--primary-color);
   }
   
   /* Стили для темной темы */
   [data-theme="dark"] .app-header {
     background-color: #121212;
-  }
-  
-  [data-theme="dark"] .header-button {
-    background-color: rgba(50, 50, 50, 0.3);
-  }
-  
-  [data-theme="dark"] .header-button:hover {
-    background-color: rgba(70, 70, 70, 0.5);
-  }
-  
-  [data-theme="dark"] .header-button svg {
-    color: #eee;
   }
   
   /* Стили для бокового меню */
@@ -137,16 +143,3 @@
   [data-theme="light"] .app-header {
     background-color: rgba(255, 255, 255, 0.2);
   }
-  
-  [data-theme="light"] .header-button {
-    background-color: rgba(230, 230, 230, 0.3);
-  }
-  
-  [data-theme="light"] .header-button:hover {
-    background-color: rgba(200, 200, 200, 0.5);
-  }
-  
-  [data-theme="light"] .header-button svg {
-    color: #333;
-  }
-  

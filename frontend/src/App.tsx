@@ -27,12 +27,10 @@ function App() {
   const [messagesAfterAction, setMessagesAfterAction] = useState<Message[]>([])
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeType>(() => {
-    // First check localStorage
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light' || savedTheme === 'dark') {
       return savedTheme;
     }
-    // Then check system preference
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -244,7 +242,6 @@ function App() {
     }
   };
   
-  // Функция для переключения меню
   const toggleMenu = () => {
     setIsMenuOpen(prev => !prev);
   };
