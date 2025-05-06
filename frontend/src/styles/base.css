@@ -62,57 +62,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Стили для бокового меню */
-.side-menu {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 250px;
-  background-color: #1a1a1a;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
-  z-index: 1001;
-  transform: translateX(0);
-  transition: transform 0.3s ease;
-}
-
-.menu-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #333;
-}
-
-.close-menu {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #eee;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-}
-
-.menu-items {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.menu-items li {
-  padding: 15px 20px;
-  border-bottom: 1px solid #333;
-  cursor: pointer;
-  color: #eee;
-  text-align: left;
-}
-
-.menu-items li:hover {
-  background-color: #333;
-}
-
 /* Стили для светлой темы */
 [data-theme="light"] {
   color-scheme: light;

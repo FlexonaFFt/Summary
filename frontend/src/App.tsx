@@ -26,6 +26,7 @@ function App() {
   const [activeAction, setActiveAction] = useState<ActionType>(null)
   const [messagesAfterAction, setMessagesAfterAction] = useState<Message[]>([])
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(['reporting'])
   const [theme, setTheme] = useState<ThemeType>(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light' || savedTheme === 'dark') {
@@ -245,6 +246,14 @@ function App() {
   const toggleMenu = () => {
     setIsMenuOpen(prev => !prev);
   };
+
+  const toggleSubmenu = (menuName: string) => {
+    setExpandedMenus(prev => 
+      prev.includes(menuName) 
+        ? prev.filter(item => item !== menuName) 
+        : [...prev, menuName]
+    );
+  };
   
   const toggleTheme = () => {
     setTheme(prev => {
@@ -281,15 +290,123 @@ function App() {
       {isMenuOpen && (
         <div className="side-menu">
           <div className="menu-header">
-            <h3>Меню</h3>
-            <button className="close-menu" onClick={toggleMenu} aria-label="Закрыть меню">×</button>
+            <h2>Меню</h2>
+            <button className="close-menu" onClick={toggleMenu} aria-label="Закрыть меню">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
           </div>
-          <ul className="menu-items">
-            <li>Главная</li>
-            <li>О проекте</li>
-            <li>Настройки</li>
-            <li>Помощь</li>
-          </ul>
+          <div className="menu-items">
+            <div className="menu-item">
+              <div className="menu-item-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="menu-item-text">Dashboard</div>
+            </div>
+            
+            <div className="menu-item">
+              <div className="menu-item-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="menu-item-text">Search</div>
+            </div>
+            
+            <div 
+              className={`menu-item expandable ${expandedMenus.includes('reporting') ? 'expanded' : ''}`}
+              onClick={() => toggleSubmenu('reporting')}
+            >
+              <div className="menu-item-content">
+                <div className="menu-item-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 20V10M18 20V4M6 20v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <div className="menu-item-text">Reporting</div>
+              </div>
+              <div className="menu-item-arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            
+            {expandedMenus.includes('reporting') && (
+              <div className="submenu">
+                <div className="menu-item submenu-item">
+                  <div className="menu-item-text">Check-ins</div>
+                </div>
+                <div className="menu-item submenu-item">
+                  <div className="menu-item-text">Objectives</div>
+                </div>
+                <div className="menu-item submenu-item">
+                  <div className="menu-item-text">Career Hub</div>
+                </div>
+              </div>
+            )}
+            
+            <div className="menu-item active">
+              <div className="menu-item-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="menu-item-text">Notifications</div>
+            </div>
+            
+            <div className="menu-item">
+              <div className="menu-item-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M22 6l-10 7L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="menu-item-text">Mail</div>
+            </div>
+            
+            <div className="menu-item selected">
+              <div className="menu-item-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="menu-item-text">Inbox</div>
+            </div>
+            
+            <div className="menu-item">
+              <div className="menu-item-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="menu-item-text">Kanban</div>
+            </div>
+            
+            <div className="menu-item">
+              <div className="menu-item-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <line x1="8" y1="6" x2="21" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="8" y1="12" x2="21" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="8" y1="18" x2="21" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="3" y1="12" x2="3.01" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="3" y1="18" x2="3.01" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="menu-item-text">Tasks</div>
+              <div className="menu-item-badge">3</div>
+            </div>
+          </div>
         </div>
       )}
       

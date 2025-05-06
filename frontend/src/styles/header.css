@@ -62,54 +62,118 @@
     background-color: #121212;
   }
   
-  /* Стили для бокового меню */
-  .side-menu {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 250px;
-    background-color: #fff;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    z-index: 1001;
-    transform: translateX(0);
-    transition: transform 0.3s ease;
-  }
   
-  .menu-header {
+  /* Профиль пользователя в меню */
+  .user-profile {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid #eee;
+    padding: 16px 20px;
+    border-bottom: 1px solid #333;
   }
   
-  .close-menu {
-    background: none;
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #444;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #fff;
+  }
+  
+  .user-info {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .user-name {
+    font-weight: 500;
+    font-size: 16px;
+    margin-bottom: 2px;
+  }
+  
+  .user-status {
+    font-size: 14px;
+    color: #999;
+  }
+  
+  /* Секции меню */
+  .menu-section {
+    margin-top: 16px;
+  }
+  
+  .menu-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    font-size: 14px;
+    color: #999;
+    font-weight: 500;
+  }
+  
+  /* Элементы меню с иконками */
+  .menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .menu-item:hover {
+    background-color: #2a2a2a;
+  }
+  
+  .menu-item-icon {
+    margin-right: 12px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .menu-item-text {
+    flex-grow: 1;
+  }
+  
+  .menu-item-badge {
+    background-color: #2b95d6;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+  }
+  
+  /* Кнопка обновления */
+  .upgrade-button {
+    display: flex;
+    align-items: center;
+    margin: 16px 20px;
+    padding: 10px 16px;
+    background-color: transparent;
     border: none;
-    font-size: 24px;
+    border-radius: 8px;
+    color: #ff5722;
     cursor: pointer;
+    transition: background-color 0.2s ease;
   }
   
-  .menu-items {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  .upgrade-button:hover {
+    background-color: rgba(255, 87, 34, 0.1);
   }
   
-  .menu-items li {
-    padding: 15px 20px;
-    border-bottom: 1px solid #eee;
-    cursor: pointer;
-  }
-  
-  .menu-items li:hover {
-    background-color: #f5f5f5;
+  .upgrade-icon {
+    margin-right: 8px;
   }
   
   /* Темная тема для меню */
   [data-theme="dark"] .side-menu {
-    background-color: #222;
+    background-color: #1a1a1a;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
   }
   
@@ -123,11 +187,50 @@
   }
   
   [data-theme="dark"] .menu-items li:hover {
-    background-color: #333;
+    background-color: #2a2a2a;
   }
   
   [data-theme="dark"] .close-menu {
     color: #eee;
+  }
+  
+  /* Светлая тема для меню */
+  [data-theme="light"] .side-menu {
+    background-color: #fff;
+    color: #333;
+  }
+  
+  [data-theme="light"] .menu-header {
+    border-bottom: 1px solid #eee;
+  }
+  
+  [data-theme="light"] .user-profile {
+    border-bottom: 1px solid #eee;
+  }
+  
+  [data-theme="light"] .user-avatar {
+    background-color: #e0e0e0;
+    color: #555;
+  }
+  
+  [data-theme="light"] .user-status {
+    color: #777;
+  }
+  
+  [data-theme="light"] .menu-section-header {
+    color: #777;
+  }
+  
+  [data-theme="light"] .menu-item:hover {
+    background-color: #f5f5f5;
+  }
+  
+  [data-theme="light"] .upgrade-button {
+    color: #ff5722;
+  }
+  
+  [data-theme="light"] .upgrade-button:hover {
+    background-color: rgba(255, 87, 34, 0.1);
   }
   
   /* Стили для светлой темы */
