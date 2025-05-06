@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { setupTextareaAutosize } from './utils/textareaAutoResize'
 import TypewriterText from './components/TypewriterText'
-import HomePage from './components/HomePage'
 import './styles/index.css'
 
 type MessageType = 'user' | 'model' | 'file';
@@ -27,8 +26,15 @@ function App() {
   const [activeAction, setActiveAction] = useState<ActionType>(null)
   const [messagesAfterAction, setMessagesAfterAction] = useState<Message[]>([])
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [theme, setTheme] = useState<ThemeType>('light')
-  const [showHomePage, setShowHomePage] = useState(true)
+  const [theme, setTheme] = useState<ThemeType>(() => {
+    // First check localStorage
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      return savedTheme;
+    }
+    // Then check system preference
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const initTextareaResize = useRef<() => void>()
@@ -49,6 +55,35 @@ function App() {
     }
   }, [messages, messagesAfterAction, isTyping]);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (!localStorage.getItem('theme')) {
+        setTheme(e.matches ? 'dark' : 'light');
+      }
+    };
+    
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+    } else {
+      mediaQuery.addListener(handleChange);
+    }
+    
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleChange);
+      } else {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -214,33 +249,207 @@ function App() {
     setIsMenuOpen(prev => !prev);
   };
   
-  // Функция для переключения темы
   const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    setTheme(prev => {
+      const newTheme = prev === 'light' ? 'dark' : 'light';
+      localStorage.setItem('theme', newTheme);
+      return newTheme;
+    });
   };
   
-  // Применяем тему к документу
-  useEffect(() => {
-    document.body.setAttribute('data-theme', theme);
-  }, [theme]);
-  
-  // Функция для переключения между главной страницей и приложением
-  const handleStartApp = () => {
-    setShowHomePage(false);
-  };
-
   return (
-    <>
-      {showHomePage ? (
-        <HomePage onStart={handleStartApp} />
-      ) : (
-        <div className="app-container" data-theme={theme}>
-          {/* Здесь весь остальной контент приложения */}
-          {/* ... */}
+    <div className={`app-container ${theme}`}>
+      {/* Хедер с минималистичными кнопками */}
+      <header className="app-header minimal-header">
+        <button className="header-button" onClick={toggleMenu} aria-label="Открыть меню">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <button className="header-button theme-toggle" onClick={toggleTheme} aria-label="Переключить тему">
+          {theme === 'light' ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+        </button>
+      </header>
+      
+      {/* Боковое меню */}
+      {isMenuOpen && (
+        <div className="side-menu">
+          <div className="menu-header">
+            <h3>Меню</h3>
+            <button className="close-menu" onClick={toggleMenu} aria-label="Закрыть меню">×</button>
+          </div>
+          <ul className="menu-items">
+            <li>Главная</li>
+            <li>О проекте</li>
+            <li>Настройки</li>
+            <li>Помощь</li>
+          </ul>
         </div>
       )}
-    </>
-  );
+      
+      <div className="logo-container">
+        <div className="logo">
+          <div className="logo-top"></div>
+          <div className="logo-bottom"></div>
+        </div>
+      </div>
+      
+      <div className="chat-container" ref={chatContainerRef}>
+        {messages.length === 0 ? (
+          <div className="welcome-message">
+            <h1>Суммаризатор текста</h1>
+            <p>Введите текст для суммаризации или загрузите файл</p>
+          </div>
+        ) : (
+          <>
+            {messages.map((message, index) => (
+              <div key={index} className={`message ${message.type}-message`}>
+                <div className="message-avatar">
+                  {message.type === 'user' ? '👤' : message.type === 'file' ? '📄' : '🤖'}
+                </div>
+                <div className="message-content">
+                  {message.type === 'model' && index === messages.length - 1 && isTyping && !activeAction ? (
+                    <TypewriterText 
+                      text={message.text} 
+                      speed={20} 
+                      onComplete={() => setIsTyping(false)} 
+                    />
+                  ) : (
+                    message.text
+                  )}
+                </div>
+              </div>
+            ))}
+            
+            {messages.length > 0 && 
+             messages[messages.length - 1].type === 'model' && 
+             !isTyping && 
+             activeFile && 
+             !activeAction && (
+              <div className="model-actions">
+                <button 
+                  className="action-button"
+                  onClick={handleContinueSummarization}
+                >
+                  Продолжить суммаризацию
+                </button>
+                <button 
+                  className="action-button"
+                  onClick={handleAskQuestion}
+                >
+                  Задать вопрос по файлу
+                </button>
+              </div>
+            )}
+            
+            {activeAction && (
+              <div className="action-divider">
+                <div className="divider-line"></div>
+                <div className="divider-text">
+                  {activeAction === 'continue' ? 'Продолжение суммаризации' : 'Вопрос по файлу'}
+                </div>
+                <div className="divider-line"></div>
+              </div>
+            )}
+            
+            {messagesAfterAction.map((message, index) => (
+              <div key={`after-${index}`} className={`message ${message.type}-message`}>
+                <div className="message-avatar">
+                  {message.type === 'user' ? '👤' : message.type === 'file' ? '📄' : '🤖'}
+                </div>
+                <div className="message-content">
+                  {message.type === 'model' && index === messagesAfterAction.length - 1 && isTyping ? (
+                    <TypewriterText 
+                      text={message.text} 
+                      speed={20} 
+                      onComplete={() => setIsTyping(false)} 
+                    />
+                  ) : (
+                    message.text
+                  )}
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+        {isLoading && (
+          <div className="message model-message">
+            <div className="message-avatar">🤖</div>
+            <div className="message-content">
+              <div className="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      <div className="input-wrapper">
+        <form onSubmit={handleSubmit} className="input-form">
+          <textarea
+            ref={textareaRef}
+            value={inputText}
+            onChange={handleTextareaChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Введите текст для суммаризации..."
+            className="modern-input"
+            rows={1}
+            disabled={isLoading || isTyping}
+          />
+          <div className="input-actions">
+            <label className="file-upload-label">
+              <input 
+                type="file" 
+                accept=".txt,.doc,.docx,.pdf" 
+                onChange={handleFileUpload}
+                className="file-input"
+                disabled={isLoading || isTyping}
+              />
+              <svg className="attachment-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.44 11.05l-9.19 9.19a6.003 6.003 0 01-8.49-8.49l9.19-9.19a4.002 4.002 0 015.66 5.66l-9.2 9.19a2.001 2.001 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </label>
+            <button 
+              type="submit" 
+              className="send-button"
+              disabled={isLoading || !inputText.trim() || isTyping}
+            >
+              {isLoading ? (
+                <div className="loading-spinner"></div>
+              ) : (
+                <span className="send-icon-text">➤</span>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
 }
 
-export default App;
+// Вспомогательные функции
+function getFileIcon(fileType: string): string {
+  if (fileType.includes('pdf')) return 'PDF';
+  if (fileType.includes('word') || fileType.includes('docx')) return 'DOC';
+  if (fileType.includes('text')) return 'TXT';
+  return 'FILE';
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+export default App
