@@ -1,0 +1,28 @@
+@import './base.css';
+@import './animations.css';
+@import './header.css';
+@import './chat.css';  
+@import './input.css';
+@import './file.css';
+@import './actions.css';
+@import './responsive.css';
+
+/* Глобальные стили для светлой темы */
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="light"] .app-container {
+  background-color: #ffffff;
+  color: #213547;
+}
+
+/* Глобальные стили для темной темы */
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .app-container {
+  background-color: #121212;
+  color: #eee;
+}
