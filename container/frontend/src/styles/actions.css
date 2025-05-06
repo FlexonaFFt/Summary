@@ -1,0 +1,65 @@
+/* Стили для кнопок действий */
+.model-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px; 
+  margin-bottom: 16px;
+  justify-content: center; 
+  width: 100%;
+  padding-left: 0; 
+}
+
+.action-button {
+  background-color: rgba(77, 166, 255, 0.1);
+  color: #4da6ff;
+  border: 1px solid rgba(77, 166, 255, 0.3);
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.action-button:hover {
+  background-color: rgba(77, 166, 255, 0.2);
+  border-color: rgba(77, 166, 255, 0.5);
+}
+
+.action-button:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+/* Стили для разделителя с текстом */
+.action-divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 16px 0;
+  padding: 0 10px;
+}
+
+.divider-line {
+  flex-grow: 1;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.divider-text {
+  padding: 0 12px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* Стили для светлой темы */
+[data-theme="light"] .divider-line {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .divider-text {
+  color: rgba(0, 0, 0, 0.6);
+}
