@@ -5,34 +5,41 @@ from aiokafka import AIOKafkaProducer
 import aioredis
 import asyncio, os
 from loguru import logger
+from contextlib import asynccontextmanager
 
-app = FastAPI()
 redis = None
 producer = None
 
 class TextRequest(BaseModel):
     text: str
-while True:
-    try:
-        redis = aioredis.from_url("redis://redis")
-        @app.on_event("startup")
-        async def startup_event():
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
+    global redis, producer
+    
+    connected = False
+    while not connected:
+        try:
             bootstrap_servers = os.getenv("BOOTSTRAP_SERVERS", "kafka:9092")
-            global redis, producer
             redis = aioredis.from_url("redis://redis")
             producer = AIOKafkaProducer(bootstrap_servers=bootstrap_servers)
             await producer.start()
             logger.add("/var/log/fastapi/app.log", rotation="1 day")
             logger.info("FastAPI запущен")
-        break
-    except Exception:
-        print("❌ Redis or Kafka is not available yet. Retrying in 5s...")
-        asyncio.sleep(5)
+            connected = True
+        except Exception as e:
+            print(f"❌ Redis or Kafka is not available yet. Retrying in 5s... Error: {e}")
+            await asyncio.sleep(5)
+    
+    yield  # This yield separates startup from shutdown logic
+    
+    # Shutdown logic
+    if producer:
+        await producer.stop()
+    logger.info("FastAPI остановлен")
 
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    await producer.stop()
+app = FastAPI(lifespan=lifespan)
 
 @app.post("/summarize")
 async def summarize(data: TextRequest):
