@@ -1,2 +1,6 @@
 2025-05-07 13:56:36.746 | INFO     | main:lifespan:31 - FastAPI запущен
 2025-05-07 14:07:24.079 | INFO     | main:lifespan:42 - FastAPI остановлен
+2025-05-07 14:57:30.023 | INFO     | main:lifespan:31 - FastAPI запущен
+2025-05-07 15:07:01.142 | INFO     | main:lifespan:42 - FastAPI остановлен
+2025-05-07 16:12:23.845 | INFO     | main:lifespan:31 - FastAPI запущен
+2025-05-07 16:27:01.209 | INFO     | main:lifespan:42 - FastAPI остановлен
