@@ -1,11 +1,15 @@
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, UploadFile, File
 from pydantic import BaseModel
 import uuid
 from aiokafka import AIOKafkaProducer
+import io, docx  
+import PyPDF2 
+import pytesseract
 import aioredis
 import asyncio, os
 from loguru import logger
 from contextlib import asynccontextmanager
+from pdf2image import convert_from_bytes
 
 redis = None
 producer = None
@@ -15,7 +19,6 @@ class TextRequest(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup logic
     global redis, producer
     
     connected = False
@@ -34,9 +37,8 @@ async def lifespan(app: FastAPI):
             print(f"❌ Redis or Kafka is not available yet. Retrying in 5s... Error: {e}")
             await asyncio.sleep(5)
     
-    yield  # This yield separates startup from shutdown logic
+    yield  
     
-    # Shutdown logic
     if producer:
         await producer.stop()
     logger.info("FastAPI остановлен")
@@ -60,3 +62,80 @@ async def check_status(request_id: str):
         else:
             return {"status": "processing"}
     return {"status": "not_found"}
+
+@app.post("/summarize-file")
+async def summarize_file(file: UploadFile = File(...)):
+    try:
+        text = await extract_text(file)
+        
+        if not text:
+            return {"error": "Не удалось извлечь текст из файла"}
+        
+        request_id = str(uuid.uuid4())
+        await redis.set(request_id, "processing")
+        await producer.send_and_wait("summarize", f"{request_id}|{text}".encode())
+        
+        logger.info(f"Файл {file.filename} отправлен на суммаризацию, ID={request_id}")
+        return {"request_id": request_id, "filename": file.filename}
+    
+    except Exception as e:
+        logger.error(f"Ошибка при обработке файла: {e}")
+        return {"error": f"Ошибка при обработке файла: {str(e)}"}
+
+
+
+# Функции для извлечения текста из файлов 
+async def extract_text_from_pdf(file_content):
+    try:
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(file_content))
+        text = ""
+        for page_num in range(len(pdf_reader.pages)):
+            text += pdf_reader.pages[page_num].extract_text()
+        
+        if not text.strip():
+            logger.info("Применение OCR для PDF файла")
+            images = convert_from_bytes(file_content)
+            text = ""
+            for image in images:
+                text += pytesseract.image_to_string(image, lang='rus+eng')
+        
+        return text
+    except Exception as e:
+        logger.error(f"Ошибка при извлечении текста из PDF: {e}")
+        return ""
+
+async def extract_text_from_docx(file_content):
+    try:
+        doc = docx.Document(io.BytesIO(file_content))
+        text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+        return text
+    except Exception as e:
+        logger.error(f"Ошибка при извлечении текста из DOCX: {e}")
+        return ""
+
+async def extract_text_from_txt(file_content):
+    try:
+        return file_content.decode('utf-8')
+    except UnicodeDecodeError:
+        try:
+            return file_content.decode('cp1251')  
+        except Exception as e:
+            logger.error(f"Ошибка при декодировании TXT файла: {e}")
+            return ""
+    except Exception as e:
+        logger.error(f"Ошибка при извлечении текста из TXT: {e}")
+        return ""
+
+async def extract_text(file: UploadFile):
+    content = await file.read()
+    file_extension = os.path.splitext(file.filename)[1].lower()
+    
+    if file_extension == '.pdf':
+        return await extract_text_from_pdf(content)
+    elif file_extension == '.docx':
+        return await extract_text_from_docx(content)
+    elif file_extension == '.txt':
+        return await extract_text_from_txt(content)
+    else:
+        logger.error(f"Неподдерживаемый формат файла: {file_extension}")
+        return ""

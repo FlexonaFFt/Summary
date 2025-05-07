@@ -4,3 +4,6 @@
 2025-05-07 15:07:01.142 | INFO     | main:lifespan:42 - FastAPI остановлен
 2025-05-07 16:12:23.845 | INFO     | main:lifespan:31 - FastAPI запущен
 2025-05-07 16:27:01.209 | INFO     | main:lifespan:42 - FastAPI остановлен
+2025-05-07 21:55:54.774 | INFO     | main:lifespan:34 - FastAPI запущен
+2025-05-07 22:00:08.267 | INFO     | main:summarize_file:78 - Файл Жаров.pdf отправлен на суммаризацию, ID=9534ab35-d8c8-4866-891a-17f0bf2ab380
+2025-05-07 22:01:31.528 | INFO     | main:lifespan:44 - FastAPI остановлен
