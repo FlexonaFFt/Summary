@@ -10,6 +10,7 @@ import asyncio, os
 from loguru import logger
 from contextlib import asynccontextmanager
 from pdf2image import convert_from_bytes
+from fastapi.middleware.cors import CORSMiddleware
 
 redis = None
 producer = None
@@ -44,6 +45,14 @@ async def lifespan(app: FastAPI):
     logger.info("FastAPI остановлен")
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/summarize")
 async def summarize(data: TextRequest):

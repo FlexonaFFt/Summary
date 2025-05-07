@@ -3,6 +3,41 @@ import { setupTextareaAutosize } from './utils/textareaAutoResize'
 import TypewriterText from './components/TypewriterText'
 import './styles/index.css'
 
+const pollStatus = async (requestId: string, maxAttempts = 30, interval = 1000) => {
+  let attempts = 0;
+  
+  while (attempts < maxAttempts) {
+    try {
+      const response = await fetch(`http://localhost:8000/status/${requestId}`, {
+        method: 'GET'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Ошибка HTTP: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.status === 'done') {
+        return result;
+      }
+      
+      if (result.status === 'not_found') {
+        return { error: 'Запрос не найден' };
+      }
+      
+      // Ждем перед следующей попыткой
+      await new Promise(resolve => setTimeout(resolve, interval));
+      attempts++;
+    } catch (error) {
+      console.error('Ошибка при проверке статуса:', error);
+      return { error: 'Произошла ошибка при проверке статуса' };
+    }
+  }
+  
+  return { error: 'Превышено время ожидания ответа' };
+};
+
 type MessageType = 'user' | 'model' | 'file';
 type ActionType = 'continue' | 'question' | null;
 type ThemeType = 'light' | 'dark';
@@ -100,39 +135,76 @@ function App() {
     
     try {
       if (activeAction === 'question' && activeFile) {
-        setTimeout(() => {
-          const modelResponse = `Ответ на ваш вопрос "${userMessage}" по файлу "${activeFile.name}": ...`;
-          setIsLoading(false);
-          setIsTyping(true);
-          setMessagesAfterAction(prev => [...prev, { type: 'model', text: modelResponse }]);
-        }, 1500);
+        // Здесь нужно реализовать логику для вопросов по файлу
+        // Поскольку в бэкенде нет специального маршрута для вопросов,
+        // можно использовать общий маршрут для суммаризации
+        const formData = new FormData();
+        formData.append('file', activeFile);
+        formData.append('question', userMessage);
+        
+        const response = await fetch('http://localhost:8000/summarize-file', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Ошибка HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setIsLoading(false);
+        setIsTyping(true);
+        
+        // Проверяем, нужно ли опрашивать статус
+        if (data.request_id) {
+          const result = await pollStatus(data.request_id);
+          if (result.error) {
+            throw new Error(result.error);
+          }
+          setMessagesAfterAction(prev => [...prev, { type: 'model', text: result.summary || 'Не удалось получить ответ' }]);
+        } else {
+          setMessagesAfterAction(prev => [...prev, { type: 'model', text: data.summary || 'Не удалось получить ответ' }]);
+        }
       } else {
-        setTimeout(() => {
-          const modelResponse = `Это пример суммаризации текста: "${userMessage.substring(0, 50)}..."`;
+        // Для обычной суммаризации текста
+        const response = await fetch('http://localhost:8000/summarize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: userMessage })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Ошибка HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Проверяем, нужно ли опрашивать статус
+        if (data.request_id) {
+          const result = await pollStatus(data.request_id);
+          if (result.error) {
+            throw new Error(result.error);
+          }
+          
           setIsLoading(false);
           setIsTyping(true);
           
           if (activeAction) {
-            setMessagesAfterAction(prev => [...prev, { type: 'model', text: modelResponse }]);
+            setMessagesAfterAction(prev => [...prev, { type: 'model', text: result.summary || 'Не удалось получить ответ' }]);
           } else {
-            setMessages(prev => [...prev, { type: 'model', text: modelResponse }]);
+            setMessages(prev => [...prev, { type: 'model', text: result.summary || 'Не удалось получить ответ' }]);
           }
-        }, 1000);
+        } else {
+          setIsLoading(false);
+          setIsTyping(true);
+          
+          if (activeAction) {
+            setMessagesAfterAction(prev => [...prev, { type: 'model', text: data.summary || 'Не удалось получить ответ' }]);
+          } else {
+            setMessages(prev => [...prev, { type: 'model', text: data.summary || 'Не удалось получить ответ' }]);
+          }
+        }
       }
-      
-      // Реальный запрос будет выглядеть примерно так:
-      // const response = await fetch('ваш_api_endpoint', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ 
-      //     text: userMessage,
-      //     fileId: activeFile?.name,
-      //     actionType: activeAction
-      //   })
-      // });
-      // const data = await response.json();
-      // setIsTyping(true);
-      // setMessages(prev => [...prev, { type: 'model', text: data.summary }]);
     } catch (error) {
       console.error('Ошибка при получении ответа:', error);
       setIsTyping(true);
@@ -176,23 +248,34 @@ function App() {
     setIsLoading(true);
     
     try {
-      setTimeout(() => {
-        const modelResponse = `Это пример суммаризации файла "${file.name}". Документ содержит информацию о...`;
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('http://localhost:8000/summarize-file', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Ошибка HTTP: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Проверяем, нужно ли опрашивать статус
+      if (data.request_id) {
+        const result = await pollStatus(data.request_id);
+        if (result.error) {
+          throw new Error(result.error);
+        }
         setIsLoading(false);
         setIsTyping(true);
-        setMessages(prev => [...prev, { type: 'model', text: modelResponse }]);
-      }, 1500);
-      
-      // Реальный запрос будет выглядеть примерно так:
-      // const formData = new FormData();
-      // formData.append('file', file);
-      // const response = await fetch('ваш_api_endpoint/upload', {
-      //   method: 'POST',
-      //   body: formData
-      // });
-      // const data = await response.json();
-      // setIsTyping(true);
-      // setMessages(prev => [...prev, { type: 'model', text: data.summary }]);
+        setMessages(prev => [...prev, { type: 'model', text: result.summary || 'Не удалось получить ответ' }]);
+      } else {
+        setIsLoading(false);
+        setIsTyping(true);
+        setMessages(prev => [...prev, { type: 'model', text: data.summary || 'Не удалось получить ответ' }]);
+      }
     } catch (error) {
       console.error('Ошибка при обработке файла:', error);
       setIsTyping(true);
@@ -209,15 +292,52 @@ function App() {
     if (!activeFile) return;
     
     setActiveAction('continue');
-    
     setIsLoading(true);
     
-    setTimeout(() => {
-      const modelResponse = `Продолжение суммаризации файла "${activeFile.name}". Дополнительно можно отметить, что...`;
-      setIsLoading(false);
-      setIsTyping(true);
-      setMessagesAfterAction(prev => [...prev, { type: 'model', text: modelResponse }]);
-    }, 1500);
+    const fetchContinueSummary = async () => {
+      try {
+        const formData = new FormData();
+        formData.append('file', activeFile);
+        // Поскольку в бэкенде нет специального маршрута для продолжения суммаризации,
+        // используем тот же маршрут для суммаризации файла
+        
+        const response = await fetch('http://localhost:8000/summarize-file', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Ошибка HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Проверяем, нужно ли опрашивать статус
+        if (data.request_id) {
+          const result = await pollStatus(data.request_id);
+          if (result.error) {
+            throw new Error(result.error);
+          }
+          setIsLoading(false);
+          setIsTyping(true);
+          setMessagesAfterAction(prev => [...prev, { type: 'model', text: result.summary || 'Не удалось получить ответ' }]);
+        } else {
+          setIsLoading(false);
+          setIsTyping(true);
+          setMessagesAfterAction(prev => [...prev, { type: 'model', text: data.summary || 'Не удалось получить ответ' }]);
+        }
+      } catch (error) {
+        console.error('Ошибка при продолжении суммаризации:', error);
+        setIsTyping(true);
+        setMessagesAfterAction(prev => [...prev, { 
+          type: 'model', 
+          text: 'Произошла ошибка при продолжении суммаризации. Пожалуйста, попробуйте снова.' 
+        }]);
+        setIsLoading(false);
+      }
+    };
+    
+    fetchContinueSummary();
   }
 
   const handleAskQuestion = () => {
