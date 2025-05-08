@@ -2,6 +2,7 @@ from kafka import KafkaConsumer
 import redis
 import os
 import time
+import numpy as np 
 from loguru import logger
 import torch
 from transformers import T5ForConditionalGeneration, T5Tokenizer, AutoModelForQuestionAnswering, AutoTokenizer
@@ -30,7 +31,7 @@ def load_qa_model():
     global qa_model, qa_tokenizer
     try:
         logger.info("Загрузка модели для ответов на вопросы...")
-        model_name = "distilbert-base-cased-distilled-squad"
+        model_name = "DeepPavlov/rubert-base-cased"  
         qa_tokenizer = AutoTokenizer.from_pretrained(model_name)
         qa_model = AutoModelForQuestionAnswering.from_pretrained(model_name)
         logger.info("Модель для ответов на вопросы успешно загружена")
@@ -70,55 +71,108 @@ def answer_question(context, question):
                 logger.error("Не удалось загрузить модель для ответов на вопросы")
                 return "Ошибка при обработке вопроса"
         
-        max_length = 512
-        if len(context) > max_length:
-            context = context[:max_length]
+        # Увеличиваем максимальную длину контекста
+        max_length = 1024  # Увеличиваем с 512 до 1024
         
-        inputs = qa_tokenizer(question, context, return_tensors="pt", max_length=512, truncation=True)
-        with torch.no_grad():
-            outputs = qa_model(**inputs)
-            answer_start = torch.argmax(outputs.start_logits)
-            answer_end = torch.argmax(outputs.end_logits)
+        # Если контекст слишком большой, разбиваем его на части и обрабатываем каждую
+        if len(context) > max_length * 3:  # Если текст очень большой
+            # Разделяем на части с перекрытием
+            chunks = []
+            chunk_size = max_length - 100  # Оставляем место для перекрытия
+            for i in range(0, len(context), chunk_size):
+                chunk = context[max(0, i-50):min(len(context), i+chunk_size)]
+                chunks.append(chunk)
             
-            # Проверка валидности ответа
-            if answer_end < answer_start:
+            # Обрабатываем каждый фрагмент и собираем результаты
+            best_answer = ""
+            best_score = -float('inf')
+            
+            for chunk in chunks:
+                inputs = qa_tokenizer(question, chunk, return_tensors="pt", max_length=max_length, 
+                                     truncation=True, padding=True)
+                
+                with torch.no_grad():
+                    outputs = qa_model(**inputs)
+                    start_scores = outputs.start_logits[0].cpu().numpy()
+                    end_scores = outputs.end_logits[0].cpu().numpy()
+                    
+                    # Находим лучший ответ в этом фрагменте
+                    max_start_score = np.max(start_scores)
+                    max_end_score = np.max(end_scores)
+                    chunk_score = max_start_score + max_end_score
+                    
+                    if chunk_score > best_score:
+                        # Извлекаем ответ из этого фрагмента
+                        start_idx = int(np.argmax(start_scores))
+                        end_idx = int(np.argmax(end_scores))
+                        
+                        # Проверяем валидность индексов
+                        if end_idx >= start_idx and end_idx - start_idx <= 50:
+                            all_tokens = qa_tokenizer.convert_ids_to_tokens(inputs.input_ids[0])
+                            answer = qa_tokenizer.convert_tokens_to_string(all_tokens[start_idx:end_idx+1])
+                            answer = answer.replace('[CLS]', '').replace('[SEP]', '').strip()
+                            
+                            if answer and len(answer) >= 2:
+                                best_answer = answer
+                                best_score = chunk_score
+            
+            if best_answer:
+                return best_answer
+            else:
                 return "Не удалось найти ответ на ваш вопрос в предоставленном контексте."
+        else:
+            # Для небольших текстов используем стандартный подход
+            if len(context) > max_length:
+                context = context[:max_length]
+                
+            inputs = qa_tokenizer(question, context, return_tensors="pt", max_length=max_length, 
+                                 truncation=True, padding=True)
             
-            tokens = qa_tokenizer.convert_ids_to_tokens(inputs.input_ids[0])
-            answer = qa_tokenizer.convert_tokens_to_string(tokens[answer_start:answer_end+1])
-            
-            # Дополнительная проверка на специальные токены
-            if not answer or len(answer) < 2 or answer == "[CLS]" or answer == "[SEP]":
-                # Попробуем использовать другой подход - взять несколько токенов с наивысшими вероятностями
+            with torch.no_grad():
+                outputs = qa_model(**inputs)
                 start_scores = outputs.start_logits[0].cpu().numpy()
                 end_scores = outputs.end_logits[0].cpu().numpy()
                 
-                # Найдем топ-5 начальных и конечных позиций
-                start_indexes = (-start_scores).argsort()[:5]
-                end_indexes = (-end_scores).argsort()[:5]
+                # Находим наилучшую пару индексов начала и конца
+                max_answer_length = 50  # Максимальная длина ответа в токенах
                 
-                # Перебираем комбинации и ищем валидный ответ
-                for start_idx in start_indexes:
-                    for end_idx in end_indexes:
-                        if end_idx < start_idx or end_idx - start_idx > 20:  # Ограничиваем длину ответа
-                            continue
-                        
-                        candidate = qa_tokenizer.convert_tokens_to_string(
-                            tokens[start_idx:end_idx+1]
-                        )
-                        
-                        # Проверяем, что ответ не содержит только специальные токены
-                        if candidate and len(candidate) > 2 and candidate != "[CLS]" and candidate != "[SEP]":
-                            return candidate
+                # Ищем лучшую пару (start, end)
+                best_score = -float('inf')
+                best_start, best_end = 0, 0
                 
-                # Если все еще не нашли ответ, возвращаем сообщение
-                return "Не удалось найти ответ на ваш вопрос в предоставленном контексте."
-            
-            return answer
+                for start_idx in range(len(start_scores)):
+                    for end_idx in range(start_idx, min(start_idx + max_answer_length, len(end_scores))):
+                        score = start_scores[start_idx] + end_scores[end_idx]
+                        if score > best_score:
+                            best_score = score
+                            best_start = start_idx
+                            best_end = end_idx
+                
+                all_tokens = qa_tokenizer.convert_ids_to_tokens(inputs.input_ids[0])
+                answer = qa_tokenizer.convert_tokens_to_string(all_tokens[best_start:best_end+1])
+                answer = answer.replace('[CLS]', '').replace('[SEP]', '').strip()
+                
+                if not answer or len(answer) < 2:
+                    return "Не удалось найти ответ на ваш вопрос в предоставленном контексте."
+                
+                return answer
+                
     except Exception as e:
         logger.error(f"Ошибка при ответе на вопрос: {e}")
         return "Ошибка при обработке вопроса"
 
+def preprocess_question(question):
+    """Предварительная обработка вопроса для улучшения качества ответа"""
+    # Удаляем лишние пробелы
+    question = question.strip()
+    
+    # Добавляем знак вопроса, если его нет
+    if not question.endswith('?'):
+        question += '?'
+    
+    return question
+
+# И затем в функции main() при обработке сообщений:
 def main():
     redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
     logger.info("Инициализация моделей...")
@@ -162,6 +216,8 @@ def main():
                 parts = value.split('|', 2)
                 if len(parts) == 3:
                     request_id, context, question = parts
+                    # Предварительная обработка вопроса
+                    question = preprocess_question(question)
                     logger.info(f"Получен вопрос: ID={request_id}, вопрос={question}, длина контекста={len(context)}")
                     
                     answer = answer_question(context, question)
