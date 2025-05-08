@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { setupTextareaAutosize } from './utils/textareaAutoResize'
 import TypewriterText from './components/TypewriterText'
+import { askQuestionToFile } from './utils/api'
 import './styles/index.css'
 
 const pollStatus = async (requestId: string, maxAttempts = 30, interval = 1000) => {
@@ -135,23 +136,9 @@ function App() {
     
     try {
       if (activeAction === 'question' && activeFile) {
-        // Здесь нужно реализовать логику для вопросов по файлу
-        // Поскольку в бэкенде нет специального маршрута для вопросов,
-        // можно использовать общий маршрут для суммаризации
-        const formData = new FormData();
-        formData.append('file', activeFile);
-        formData.append('question', userMessage);
+        // Используем новый API для вопросов к файлу
+        const data = await askQuestionToFile(activeFile, userMessage);
         
-        const response = await fetch('http://localhost:8000/summarize-file', {
-          method: 'POST',
-          body: formData
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Ошибка HTTP: ${response.status}`);
-        }
-        
-        const data = await response.json();
         setIsLoading(false);
         setIsTyping(true);
         
@@ -344,7 +331,12 @@ function App() {
     if (!activeFile) return;
     
     setActiveAction('question');
-    
+    setMessagesAfterAction([]);
+    setMessages(prev => [...prev, { 
+      type: 'model', 
+      text: 'Задайте вопрос по содержимому файла, и я постараюсь на него ответить.' 
+    }]);
+
     setInputText('');
     if (textareaRef.current) {
       textareaRef.current.placeholder = `Задайте вопрос по файлу "${activeFile.name}"...`;

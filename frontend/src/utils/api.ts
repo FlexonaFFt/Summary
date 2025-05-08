@@ -104,3 +104,28 @@ export const pollStatus = async (requestId: string, maxAttempts = 30, interval =
   
   return { error: 'Превышено время ожидания ответа' };
 };
+
+/**
+ * Отправляет вопрос к файлу
+ */
+export const askQuestionToFile = async (file: File, question: string): Promise<ApiResponse> => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('question', question);
+    
+    const response = await fetch(`${API_BASE_URL}/ask-question`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Ошибка HTTP: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Ошибка при отправке вопроса к файлу:', error);
+    return { error: 'Произошла ошибка при отправке вопроса к файлу' };
+  }
+};

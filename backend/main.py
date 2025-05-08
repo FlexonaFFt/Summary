@@ -1,4 +1,4 @@
-from fastapi import FastAPI, BackgroundTasks, UploadFile, File
+from fastapi import FastAPI, BackgroundTasks, UploadFile, File, Form
 from pydantic import BaseModel
 import uuid
 from aiokafka import AIOKafkaProducer
@@ -91,6 +91,24 @@ async def summarize_file(file: UploadFile = File(...)):
         logger.error(f"Ошибка при обработке файла: {e}")
         return {"error": f"Ошибка при обработке файла: {str(e)}"}
 
+@app.post("/ask-question")
+async def ask_question(file: UploadFile = File(...), question: str = Form(...)):
+    try:
+        text = await extract_text(file)
+        
+        if not text:
+            return {"error": "Не удалось извлечь текст из файла"}
+        
+        request_id = str(uuid.uuid4())
+        await redis.set(request_id, "processing")
+        await producer.send_and_wait("question", f"{request_id}|{text}|{question}".encode())
+        
+        logger.info(f"Вопрос к файлу {file.filename} отправлен, ID={request_id}")
+        return {"request_id": request_id, "filename": file.filename}
+    
+    except Exception as e:
+        logger.error(f"Ошибка при обработке вопроса к файлу: {e}")
+        return {"error": f"Ошибка при обработке вопроса к файлу: {str(e)}"}
 
 
 # Функции для извлечения текста из файлов 
