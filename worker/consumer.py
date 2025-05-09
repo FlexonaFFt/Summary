@@ -5,7 +5,7 @@ import time
 import numpy as np 
 from loguru import logger
 import torch
-from transformers import T5ForConditionalGeneration, T5Tokenizer, AutoModelForQuestionAnswering, AutoTokenizer
+from transformers import T5ForConditionalGeneration, T5Tokenizer, AutoModelForQuestionAnswering, AutoTokenizer, pipeline, MarianMTModel, MarianTokenizer
 
 log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
 os.makedirs(log_dir, exist_ok=True)
@@ -13,6 +13,8 @@ logger.add(os.path.join(log_dir, "worker.log"), rotation="1 day")
 
 model, qa_model = None, None 
 tokenizer, qa_tokenizer = None, None 
+translator_ru_en, translator_en_ru = None, None
+translator_tokenizer_ru_en, translator_tokenizer_en_ru = None, None
 
 def load_model():
     global model, tokenizer
@@ -31,14 +33,78 @@ def load_qa_model():
     global qa_model, qa_tokenizer
     try:
         logger.info("Загрузка модели для ответов на вопросы...")
-        model_name = "DeepPavlov/rubert-base-cased"  
-        qa_tokenizer = AutoTokenizer.from_pretrained(model_name)
-        qa_model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+        model_name = "allenai/t5-small-squad11"  
+        qa_tokenizer = T5Tokenizer.from_pretrained(model_name)
+        qa_model = T5ForConditionalGeneration.from_pretrained(model_name)
         logger.info("Модель для ответов на вопросы успешно загружена")
         return True
     except Exception as e:
         logger.error(f"Ошибка при загрузке модели для ответов на вопросы: {e}")
         return False
+
+def load_translation_models():
+    global translator_ru_en, translator_en_ru, translator_tokenizer_ru_en, translator_tokenizer_en_ru
+    try:
+        logger.info("Загрузка моделей для перевода...")
+        ru_en_model = "Helsinki-NLP/opus-mt-ru-en"
+        translator_tokenizer_ru_en = MarianTokenizer.from_pretrained(ru_en_model)
+        translator_ru_en = MarianMTModel.from_pretrained(ru_en_model)
+        
+        en_ru_model = "Helsinki-NLP/opus-mt-en-ru"
+        translator_tokenizer_en_ru = MarianTokenizer.from_pretrained(en_ru_model)
+        translator_en_ru = MarianMTModel.from_pretrained(en_ru_model)
+        
+        logger.info("Модели для перевода успешно загружены")
+        return True
+    except Exception as e:
+        logger.error(f"Ошибка при загрузке моделей для перевода: {e}")
+        return False
+
+def translate_ru_to_en(text):
+    try:
+        if translator_ru_en is None or translator_tokenizer_ru_en is None:
+            if not load_translation_models():
+                logger.error("Не удалось загрузить модели для перевода")
+                return text
+        
+        max_length = 512
+        if len(text) > max_length:
+            chunks = []
+            for i in range(0, len(text), max_length):
+                chunks.append(text[i:i+max_length])
+            
+            translated_chunks = []
+            for chunk in chunks:
+                inputs = translator_tokenizer_ru_en(chunk, return_tensors="pt", padding=True, truncation=True, max_length=512)
+                with torch.no_grad():
+                    outputs = translator_ru_en.generate(**inputs)
+                translated_chunk = translator_tokenizer_ru_en.batch_decode(outputs, skip_special_tokens=True)[0]
+                translated_chunks.append(translated_chunk)
+            
+            return " ".join(translated_chunks)
+        else:
+            inputs = translator_tokenizer_ru_en(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
+            with torch.no_grad():
+                outputs = translator_ru_en.generate(**inputs)
+            return translator_tokenizer_ru_en.batch_decode(outputs, skip_special_tokens=True)[0]
+    except Exception as e:
+        logger.error(f"Ошибка при переводе с русского на английский: {e}")
+        return text
+
+def translate_en_to_ru(text):
+    try:
+        if translator_en_ru is None or translator_tokenizer_en_ru is None:
+            if not load_translation_models():
+                logger.error("Не удалось загрузить модели для перевода")
+                return text
+        
+        inputs = translator_tokenizer_en_ru(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
+        with torch.no_grad():
+            outputs = translator_en_ru.generate(**inputs)
+        return translator_tokenizer_en_ru.batch_decode(outputs, skip_special_tokens=True)[0]
+    except Exception as e:
+        logger.error(f"Ошибка при переводе с английского на русский: {e}")
+        return text
 
 def summarize_text(text, max_length=250):
     try:
@@ -71,113 +137,60 @@ def answer_question(context, question):
                 logger.error("Не удалось загрузить модель для ответов на вопросы")
                 return "Ошибка при обработке вопроса"
         
-        # Увеличиваем максимальную длину контекста
-        max_length = 1024  # Увеличиваем с 512 до 1024
+        logger.info(f"Перевод вопроса на английский: {question}")
+        en_question = translate_ru_to_en(question)
+        logger.info(f"Переведенный вопрос: {en_question}")
         
-        # Если контекст слишком большой, разбиваем его на части и обрабатываем каждую
-        if len(context) > max_length * 3:  # Если текст очень большой
-            # Разделяем на части с перекрытием
-            chunks = []
-            chunk_size = max_length - 100  # Оставляем место для перекрытия
-            for i in range(0, len(context), chunk_size):
-                chunk = context[max(0, i-50):min(len(context), i+chunk_size)]
-                chunks.append(chunk)
-            
-            # Обрабатываем каждый фрагмент и собираем результаты
-            best_answer = ""
-            best_score = -float('inf')
-            
-            for chunk in chunks:
-                inputs = qa_tokenizer(question, chunk, return_tensors="pt", max_length=max_length, 
-                                     truncation=True, padding=True)
-                
-                with torch.no_grad():
-                    outputs = qa_model(**inputs)
-                    start_scores = outputs.start_logits[0].cpu().numpy()
-                    end_scores = outputs.end_logits[0].cpu().numpy()
-                    
-                    # Находим лучший ответ в этом фрагменте
-                    max_start_score = np.max(start_scores)
-                    max_end_score = np.max(end_scores)
-                    chunk_score = max_start_score + max_end_score
-                    
-                    if chunk_score > best_score:
-                        # Извлекаем ответ из этого фрагмента
-                        start_idx = int(np.argmax(start_scores))
-                        end_idx = int(np.argmax(end_scores))
-                        
-                        # Проверяем валидность индексов
-                        if end_idx >= start_idx and end_idx - start_idx <= 50:
-                            all_tokens = qa_tokenizer.convert_ids_to_tokens(inputs.input_ids[0])
-                            answer = qa_tokenizer.convert_tokens_to_string(all_tokens[start_idx:end_idx+1])
-                            answer = answer.replace('[CLS]', '').replace('[SEP]', '').strip()
-                            
-                            if answer and len(answer) >= 2:
-                                best_answer = answer
-                                best_score = chunk_score
-            
-            if best_answer:
-                return best_answer
-            else:
-                return "Не удалось найти ответ на ваш вопрос в предоставленном контексте."
-        else:
-            # Для небольших текстов используем стандартный подход
-            if len(context) > max_length:
-                context = context[:max_length]
-                
-            inputs = qa_tokenizer(question, context, return_tensors="pt", max_length=max_length, 
-                                 truncation=True, padding=True)
-            
-            with torch.no_grad():
-                outputs = qa_model(**inputs)
-                start_scores = outputs.start_logits[0].cpu().numpy()
-                end_scores = outputs.end_logits[0].cpu().numpy()
-                
-                # Находим наилучшую пару индексов начала и конца
-                max_answer_length = 50  # Максимальная длина ответа в токенах
-                
-                # Ищем лучшую пару (start, end)
-                best_score = -float('inf')
-                best_start, best_end = 0, 0
-                
-                for start_idx in range(len(start_scores)):
-                    for end_idx in range(start_idx, min(start_idx + max_answer_length, len(end_scores))):
-                        score = start_scores[start_idx] + end_scores[end_idx]
-                        if score > best_score:
-                            best_score = score
-                            best_start = start_idx
-                            best_end = end_idx
-                
-                all_tokens = qa_tokenizer.convert_ids_to_tokens(inputs.input_ids[0])
-                answer = qa_tokenizer.convert_tokens_to_string(all_tokens[best_start:best_end+1])
-                answer = answer.replace('[CLS]', '').replace('[SEP]', '').strip()
-                
-                if not answer or len(answer) < 2:
-                    return "Не удалось найти ответ на ваш вопрос в предоставленном контексте."
-                
-                return answer
-                
+
+        max_context_length = 3000 
+        short_context = context[:max_context_length]
+        logger.info(f"Перевод контекста на английский (первые {len(short_context)} символов)")
+        en_context = translate_ru_to_en(short_context)
+        logger.info(f"Контекст переведен на английский (длина: {len(en_context)})")
+        
+        input_text = f"question: {en_question} context: {en_context} Give a detailed and comprehensive answer based on the context."
+        input_ids = qa_tokenizer.encode(input_text, return_tensors="pt", max_length=1024, truncation=True)
+        
+        with torch.no_grad():
+            output_ids = qa_model.generate(
+                input_ids,
+                max_length=200, 
+                min_length=30,   
+                length_penalty=2.5, 
+                num_beams=5,   
+                early_stopping=True,
+                no_repeat_ngram_size=3, 
+                temperature=0.8,  
+                top_k=50,      
+                repetition_penalty=1.2  
+            )
+        
+        en_answer = qa_tokenizer.decode(output_ids[0], skip_special_tokens=True)
+        logger.info(f"Получен ответ на английском: {en_answer}")
+        if not en_answer or len(en_answer) < 5:
+            return "Не удалось найти ответ на ваш вопрос в предоставленном контексте."
+        
+        ru_answer = translate_en_to_ru(en_answer)
+        logger.info(f"Ответ переведен на русский: {ru_answer}")
+        
+        return ru_answer
     except Exception as e:
         logger.error(f"Ошибка при ответе на вопрос: {e}")
         return "Ошибка при обработке вопроса"
 
 def preprocess_question(question):
-    """Предварительная обработка вопроса для улучшения качества ответа"""
-    # Удаляем лишние пробелы
     question = question.strip()
-    
-    # Добавляем знак вопроса, если его нет
     if not question.endswith('?'):
         question += '?'
     
     return question
 
-# И затем в функции main() при обработке сообщений:
 def main():
     redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
     logger.info("Инициализация моделей...")
     load_model()
     load_qa_model()
+    load_translation_models()
     
     connected = False
     while not connected:
