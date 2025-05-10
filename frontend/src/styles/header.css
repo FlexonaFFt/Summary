@@ -6,7 +6,7 @@
     right: 0;
     height: 60px;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     padding: 0 20px;
     z-index: 1000;
@@ -17,9 +17,9 @@
   
   /* Стили для кнопок в хедере */
   .header-button {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: 26px;
+    height: 26px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -49,12 +49,6 @@
   [data-theme="dark"] .header-button:hover {
     background-color: #363636;
     border-color: #4d4d4d;
-  }
-  
-  /* Активное состояние для меню */
-  .header-button.active {
-    background-color: var(--primary-color-light);
-    border-color: var(--primary-color);
   }
   
   /* Стили для темной темы */
