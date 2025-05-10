@@ -417,7 +417,7 @@ function App() {
                   <path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <div className="menu-item-text">Dashboard</div>
+              <div className="menu-item-text">Home</div>
             </div>
             
             <div className="menu-item">
@@ -440,7 +440,7 @@ function App() {
                     <path d="M12 20V10M18 20V4M6 20v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <div className="menu-item-text">Reporting</div>
+                <div className="menu-item-text">Chats</div>
               </div>
               <div className="menu-item-arrow">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -452,13 +452,13 @@ function App() {
             {expandedMenus.includes('reporting') && (
               <div className="submenu">
                 <div className="menu-item submenu-item">
-                  <div className="menu-item-text">Check-ins</div>
+                  <div className="menu-item-text">EptaFile.txt</div>
                 </div>
                 <div className="menu-item submenu-item">
-                  <div className="menu-item-text">Objectives</div>
+                  <div className="menu-item-text">Кто такой...</div>
                 </div>
                 <div className="menu-item submenu-item">
-                  <div className="menu-item-text">Career Hub</div>
+                  <div className="menu-item-text">Куда пришел...</div>
                 </div>
               </div>
             )}
@@ -470,7 +470,7 @@ function App() {
                   <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <div className="menu-item-text">Notifications</div>
+              <div className="menu-item-text">UserName</div>
             </div>
             
             <div className="menu-item">
@@ -480,44 +480,9 @@ function App() {
                   <path d="M22 6l-10 7L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <div className="menu-item-text">Mail</div>
+              <div className="menu-item-text">Log out</div>
             </div>
             
-            <div className="menu-item selected">
-              <div className="menu-item-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div className="menu-item-text">Inbox</div>
-            </div>
-            
-            <div className="menu-item">
-              <div className="menu-item-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div className="menu-item-text">Kanban</div>
-            </div>
-            
-            <div className="menu-item">
-              <div className="menu-item-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <line x1="8" y1="6" x2="21" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <line x1="8" y1="12" x2="21" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <line x1="8" y1="18" x2="21" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <line x1="3" y1="6" x2="3.01" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <line x1="3" y1="12" x2="3.01" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <line x1="3" y1="18" x2="3.01" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div className="menu-item-text">Tasks</div>
-              <div className="menu-item-badge">3</div>
-            </div>
           </div>
         </div>
       )}

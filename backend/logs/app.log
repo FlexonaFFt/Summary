@@ -1,45 +1,5 @@
-2025-05-07 13:56:36.746 | INFO     | main:lifespan:31 - FastAPI запущен
-2025-05-07 14:07:24.079 | INFO     | main:lifespan:42 - FastAPI остановлен
-2025-05-07 14:57:30.023 | INFO     | main:lifespan:31 - FastAPI запущен
-2025-05-07 15:07:01.142 | INFO     | main:lifespan:42 - FastAPI остановлен
-2025-05-07 16:12:23.845 | INFO     | main:lifespan:31 - FastAPI запущен
-2025-05-07 16:27:01.209 | INFO     | main:lifespan:42 - FastAPI остановлен
-2025-05-07 21:55:54.774 | INFO     | main:lifespan:34 - FastAPI запущен
-2025-05-07 22:00:08.267 | INFO     | main:summarize_file:78 - Файл Жаров.pdf отправлен на суммаризацию, ID=9534ab35-d8c8-4866-891a-17f0bf2ab380
-2025-05-07 22:01:31.528 | INFO     | main:lifespan:44 - FastAPI остановлен
-2025-05-07 22:09:08.808 | INFO     | main:lifespan:35 - FastAPI запущен
-2025-05-07 22:38:59.978 | INFO     | main:summarize_file:87 - Файл Жаров.pdf отправлен на суммаризацию, ID=60f563d4-ff5f-4b1c-b553-6958eba95798
-2025-05-07 22:39:12.320 | INFO     | main:summarize_file:87 - Файл Жаров.pdf отправлен на суммаризацию, ID=61e3ef5f-b96c-45d7-a89f-ace23a2792e1
-2025-05-07 22:40:20.179 | INFO     | main:summarize_file:87 - Файл test.txt отправлен на суммаризацию, ID=73199485-7f12-4236-8e1b-0d935d011366
-2025-05-07 22:41:06.726 | INFO     | main:lifespan:45 - FastAPI остановлен
-2025-05-08 22:03:01.733 | INFO     | main:lifespan:35 - FastAPI запущен
-2025-05-08 22:03:08.063 | INFO     | main:summarize_file:87 - Файл test.txt отправлен на суммаризацию, ID=1bc96960-a377-4f3c-8c45-dc3d8b826bbd
-2025-05-08 22:03:29.996 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=44aa0270-262b-4e0e-afff-cfc4ddee44ea
-2025-05-08 22:07:42.450 | INFO     | main:summarize_file:87 - Файл test.txt отправлен на суммаризацию, ID=106ed023-94ad-4bc6-9fe5-d0effbd441f5
-2025-05-08 22:08:08.292 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=f3bc78fa-41da-4e03-af17-dd0fb48bc36c
-2025-05-08 22:11:34.889 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=0dc87e06-c97a-47f1-9460-32e69fe4f6e7
-2025-05-08 22:12:17.447 | INFO     | main:lifespan:45 - FastAPI остановлен
-2025-05-08 22:35:38.486 | INFO     | main:lifespan:35 - FastAPI запущен
-2025-05-08 22:37:27.107 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=6ac74a92-671a-4e23-a6c1-85e7953a6e3c
-2025-05-08 22:42:55.069 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=bb97bbeb-644e-4f2d-b23e-54bb92349a3f
-2025-05-08 22:44:01.915 | INFO     | main:summarize_file:87 - Файл Жаров.pdf отправлен на суммаризацию, ID=76dcbfe2-6fbf-432f-9305-710f8e10309d
-2025-05-08 22:48:45.946 | INFO     | main:ask_question:106 - Вопрос к файлу Жаров.pdf отправлен, ID=5b9c0c02-5d9a-409a-9676-79300ad41b8c
-2025-05-08 22:48:57.937 | INFO     | main:ask_question:106 - Вопрос к файлу Жаров.pdf отправлен, ID=a4bb8c49-5b75-465a-a7bd-70f2fc93bf26
-2025-05-08 23:09:38.717 | INFO     | main:summarize_file:87 - Файл test.txt отправлен на суммаризацию, ID=fae38eba-2afd-4aa2-8525-590e0862f16b
-2025-05-08 23:10:05.143 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=6bfb7c3e-f9a5-4113-94c0-821a4939c798
-2025-05-08 23:10:19.618 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=78a83afd-88a3-407d-a087-2d00d3305c4e
-2025-05-08 23:16:40.870 | INFO     | main:summarize_file:87 - Файл test.txt отправлен на суммаризацию, ID=65c8c6fd-8b8a-4aa0-920d-2c31bd643d10
-2025-05-08 23:17:06.221 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=94bd0b12-1365-4bc0-881f-6ebbdcb5de44
-2025-05-08 23:17:17.862 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=e3b61b02-e96e-425c-8164-a498825817af
-2025-05-08 23:17:28.261 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=08b7e42d-4933-4e65-9f6c-0c8855ffc489
-2025-05-08 23:19:24.717 | INFO     | main:lifespan:45 - FastAPI остановлен
-2025-05-09 12:50:58.253 | INFO     | main:lifespan:35 - FastAPI запущен
-2025-05-09 12:53:53.420 | INFO     | main:summarize_file:87 - Файл test.txt отправлен на суммаризацию, ID=1beb4c35-6ab4-4e98-bfdf-ada189173fb0
-2025-05-09 12:54:19.106 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=e67c5364-bf89-49d1-bfc1-c9a402422804
-2025-05-09 12:54:38.068 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=1d942b91-1072-4e46-97c6-ffb8e79d3098
-2025-05-09 12:55:15.256 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=1da70281-fea2-41b0-904e-a51452442d00
-2025-05-09 12:56:17.330 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=bdfb6f07-bd12-4570-b665-8c4fdad27224
-2025-05-09 13:03:13.767 | INFO     | main:summarize_file:87 - Файл test.txt отправлен на суммаризацию, ID=4b39b432-c171-4264-bdd0-0c24f28d1598
-2025-05-09 13:03:39.699 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=6ac7c326-ed1c-456b-ab05-f66b3351f202
-2025-05-09 13:04:24.929 | INFO     | main:ask_question:106 - Вопрос к файлу test.txt отправлен, ID=074d0472-22c0-47f2-8827-3222359270a5
-2025-05-09 13:06:27.758 | INFO     | main:lifespan:45 - FastAPI остановлен
+2025-05-10 10:25:05.898 | INFO     | main:lifespan:35 - FastAPI запущен
+2025-05-10 10:26:46.463 | INFO     | main:summarize_file:87 - Файл test2.txt отправлен на суммаризацию, ID=5045b755-d977-4c02-8077-462621767a42
+2025-05-10 10:27:21.054 | INFO     | main:ask_question:106 - Вопрос к файлу test2.txt отправлен, ID=124bc607-da20-4ff6-ac75-5d2a9a577ebc
+2025-05-10 10:28:04.751 | INFO     | main:ask_question:106 - Вопрос к файлу test2.txt отправлен, ID=0c0b6fdb-6611-4a6d-8571-e0adcb69e72f
+2025-05-10 10:45:05.358 | INFO     | main:lifespan:45 - FastAPI остановлен
