@@ -1,7 +1,0 @@
-2025-05-10 10:25:05.898 | INFO     | main:lifespan:35 - FastAPI запущен
-2025-05-10 10:26:46.463 | INFO     | main:summarize_file:87 - Файл test2.txt отправлен на суммаризацию, ID=5045b755-d977-4c02-8077-462621767a42
-2025-05-10 10:27:21.054 | INFO     | main:ask_question:106 - Вопрос к файлу test2.txt отправлен, ID=124bc607-da20-4ff6-ac75-5d2a9a577ebc
-2025-05-10 10:28:04.751 | INFO     | main:ask_question:106 - Вопрос к файлу test2.txt отправлен, ID=0c0b6fdb-6611-4a6d-8571-e0adcb69e72f
-2025-05-10 10:45:05.358 | INFO     | main:lifespan:45 - FastAPI остановлен
-2025-05-10 10:57:59.654 | INFO     | main:lifespan:35 - FastAPI запущен
-2025-05-10 10:58:52.818 | INFO     | main:lifespan:45 - FastAPI остановлен

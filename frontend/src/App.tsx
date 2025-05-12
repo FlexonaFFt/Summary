@@ -1,43 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { setupTextareaAutosize } from './utils/textareaAutoResize'
 import TypewriterText from './components/TypewriterText'
-import { askQuestionToFile } from './utils/api'
+import { askQuestionToFile, pollStatus, summarizeText, summarizeFile } from './utils/api'
 import './styles/index.css'
-
-const pollStatus = async (requestId: string, maxAttempts = 30, interval = 1000) => {
-  let attempts = 0;
-  
-  while (attempts < maxAttempts) {
-    try {
-      const response = await fetch(`http://localhost:8000/status/${requestId}`, {
-        method: 'GET'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Ошибка HTTP: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      
-      if (result.status === 'done') {
-        return result;
-      }
-      
-      if (result.status === 'not_found') {
-        return { error: 'Запрос не найден' };
-      }
-      
-      // Ждем перед следующей попыткой
-      await new Promise(resolve => setTimeout(resolve, interval));
-      attempts++;
-    } catch (error) {
-      console.error('Ошибка при проверке статуса:', error);
-      return { error: 'Произошла ошибка при проверке статуса' };
-    }
-  }
-  
-  return { error: 'Превышено время ожидания ответа' };
-};
 
 type MessageType = 'user' | 'model' | 'file';
 type ActionType = 'continue' | 'question' | null;
@@ -152,19 +117,7 @@ function App() {
         }
       } else {
         // Для обычной суммаризации текста
-        const response = await fetch('http://localhost:8000/summarize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: userMessage })
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Ошибка HTTP: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        // Проверяем, нужно ли опрашивать статус
+        const data = await summarizeText(userMessage);
         if (data.request_id) {
           const result = await pollStatus(data.request_id);
           if (result.error) {
@@ -233,19 +186,8 @@ function App() {
     setIsLoading(true);
     
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await fetch('http://localhost:8000/summarize-file', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Ошибка HTTP: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      // Используем функцию из API-клиента вместо прямого fetch
+      const data = await summarizeFile(file);
       
       // Проверяем, нужно ли опрашивать статус
       if (data.request_id) {
@@ -281,21 +223,8 @@ function App() {
     
     const fetchContinueSummary = async () => {
       try {
-        const formData = new FormData();
-        formData.append('file', activeFile);
-        // Поскольку в бэкенде нет специального маршрута для продолжения суммаризации,
-        // используем тот же маршрут для суммаризации файла
-        
-        const response = await fetch('http://localhost:8000/summarize-file', {
-          method: 'POST',
-          body: formData
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Ошибка HTTP: ${response.status}`);
-        }
-        
-        const data = await response.json();
+        // Используем функцию из API-клиента вместо прямого fetch
+        const data = await summarizeFile(activeFile);
         
         // Проверяем, нужно ли опрашивать статус
         if (data.request_id) {

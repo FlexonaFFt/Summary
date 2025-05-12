@@ -1,5 +1,3 @@
-// API клиент для взаимодействия с бэкендом
-
 const API_BASE_URL = 'http://localhost:8000';
 
 export interface ApiResponse {
