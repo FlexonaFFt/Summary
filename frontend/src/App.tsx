@@ -70,7 +70,7 @@ function App() {
   });
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
-  const initTextareaResize = useRef<() => void>()
+  const initTextareaResize = useRef<() => void>(null)
 
   useEffect(() => {
     initTextareaResize.current = setupTextareaAutosize();
@@ -521,18 +521,5 @@ function App() {
   )
 }
 
-// Вспомогательные функции
-function getFileIcon(fileType: string): string {
-  if (fileType.includes('pdf')) return 'PDF';
-  if (fileType.includes('word') || fileType.includes('docx')) return 'DOC';
-  if (fileType.includes('text')) return 'TXT';
-  return 'FILE';
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-}
 
 export default App

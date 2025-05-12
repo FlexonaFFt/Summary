@@ -1,0 +1,13 @@
+sentencepiece
+accelerate
+datasets
+rouge_score
+fastapi
+uvicorn
+pytest
+python-multipart
+python-docx
+pdf2image
+pytesseract
+pdf2image
+httpx

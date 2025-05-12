@@ -5,7 +5,7 @@ producer = None
 
 async def start_kafka():
     global producer
-    producer = AIOKafkaProducer(bootstrap_servers="localhost:9092")  # Изменено с kafka:9092 на localhost:9092
+    producer = AIOKafkaProducer(bootstrap_servers="kafka:9092")  # Изменено с kafka:9092 на localhost:9092
     await producer.start()
 
 async def send_to_kafka(topic, message):
