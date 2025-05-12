@@ -11,3 +11,4 @@ pdf2image
 pytesseract
 pdf2image
 httpx
+PyPDF2

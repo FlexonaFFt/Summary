@@ -186,7 +186,7 @@ def preprocess_question(question):
     return question
 
 def main():
-    redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+    redis_client = redis.Redis(host='redis://redis', port=6379, decode_responses=True)
     logger.info("Инициализация моделей...")
     load_model()
     load_qa_model()

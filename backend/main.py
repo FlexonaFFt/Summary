@@ -25,8 +25,8 @@ async def lifespan(app: FastAPI):
     connected = False
     while not connected:
         try:
-            bootstrap_servers = os.getenv("BOOTSTRAP_SERVERS", "localhost:9092")  # Изменено с kafka:9092 на localhost:9092
-            redis = aioredis.from_url("redis://localhost")  # Изменено с redis://redis на redis://localhost
+            bootstrap_servers = os.getenv("BOOTSTRAP_SERVERS", "kafka:9092")  # Изменено с kafka:9092 на localhost:9092
+            redis = aioredis.from_url("redis://redis")  # Изменено с redis://redis на redis://localhost
             producer = AIOKafkaProducer(bootstrap_servers=bootstrap_servers)
             await producer.start()
             log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
