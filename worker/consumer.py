@@ -10,6 +10,7 @@ from transformers import T5ForConditionalGeneration, T5Tokenizer, AutoModelForQu
 log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
 os.makedirs(log_dir, exist_ok=True)
 logger.add(os.path.join(log_dir, "worker.log"), rotation="1 day")
+models_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
 
 model, qa_model = None, None 
 tokenizer, qa_tokenizer = None, None 
@@ -19,11 +20,19 @@ translator_tokenizer_ru_en, translator_tokenizer_en_ru = None, None
 def load_model():
     global model, tokenizer
     try:
-        logger.info("Загрузка модели rut5-base-sum...")
-        model_name = "IlyaGusev/rut5_base_sum_gazeta"
-        tokenizer = T5Tokenizer.from_pretrained(model_name)
-        model = T5ForConditionalGeneration.from_pretrained(model_name)
-        logger.info("Модель успешно загружена")
+        logger.info("Загрузка локальной модели для суммаризации...")
+        model_dir = os.path.join(models_dir, "summarization")
+        if os.path.exists(model_dir):
+            tokenizer = T5Tokenizer.from_pretrained(model_dir)
+            model = T5ForConditionalGeneration.from_pretrained(model_dir)
+            logger.info("Локальная модель успешно загружена")
+        else:
+            logger.info("Локальная модель не найдена, загрузка подходящей модели из интернета...")
+            model_name = "IlyaGusev/rut5_base_sum_gazeta"
+            tokenizer = T5Tokenizer.from_pretrained(model_name)
+            model = T5ForConditionalGeneration.from_pretrained(model_name)
+            logger.info("Модель успешно загружена из интернета")
+        
         return True
     except Exception as e:
         logger.error(f"Ошибка при загрузке модели: {e}")
@@ -32,11 +41,19 @@ def load_model():
 def load_qa_model():
     global qa_model, qa_tokenizer
     try:
-        logger.info("Загрузка модели для ответов на вопросы...")
-        model_name = "allenai/t5-small-squad11"  
-        qa_tokenizer = T5Tokenizer.from_pretrained(model_name)
-        qa_model = T5ForConditionalGeneration.from_pretrained(model_name)
-        logger.info("Модель для ответов на вопросы успешно загружена")
+        logger.info("Загрузка локальной модели для ответов на вопросы...")
+        model_dir = os.path.join(models_dir, "qa")
+        if os.path.exists(model_dir):
+            qa_tokenizer = T5Tokenizer.from_pretrained(model_dir)
+            qa_model = T5ForConditionalGeneration.from_pretrained(model_dir)
+            logger.info("Локальная модель для ответов на вопросы успешно загружена")
+        else:
+            logger.info("Локальная модель не найдена, загрузка подходящей модели из интернета...")
+            model_name = "allenai/t5-small-squad11"
+            qa_tokenizer = T5Tokenizer.from_pretrained(model_name)
+            qa_model = T5ForConditionalGeneration.from_pretrained(model_name)
+            logger.info("Модель для ответов на вопросы успешно загружена из интернета")
+        
         return True
     except Exception as e:
         logger.error(f"Ошибка при загрузке модели для ответов на вопросы: {e}")
@@ -45,16 +62,32 @@ def load_qa_model():
 def load_translation_models():
     global translator_ru_en, translator_en_ru, translator_tokenizer_ru_en, translator_tokenizer_en_ru
     try:
-        logger.info("Загрузка моделей для перевода...")
-        ru_en_model = "Helsinki-NLP/opus-mt-ru-en"
-        translator_tokenizer_ru_en = MarianTokenizer.from_pretrained(ru_en_model)
-        translator_ru_en = MarianMTModel.from_pretrained(ru_en_model)
+        logger.info("Загрузка локальных моделей для перевода...")
+        ru_en_dir = os.path.join(models_dir, "translation_ru_en")
+        if os.path.exists(ru_en_dir):
+            translator_tokenizer_ru_en = MarianTokenizer.from_pretrained(ru_en_dir)
+            translator_ru_en = MarianMTModel.from_pretrained(ru_en_dir)
+            logger.info("Локальная модель ruen успешно загружена")
+        else:
+            logger.info("Локальная модель перевода ruen не найдена, загрузка подходящей модели из интернета...")
+            ru_en_model = "Helsinki-NLP/opus-mt-ru-en"
+            translator_tokenizer_ru_en = MarianTokenizer.from_pretrained(ru_en_model)
+            translator_ru_en = MarianMTModel.from_pretrained(ru_en_model)
+            logger.info("Модель перевода ruen успешно загружена из интернета")
         
-        en_ru_model = "Helsinki-NLP/opus-mt-en-ru"
-        translator_tokenizer_en_ru = MarianTokenizer.from_pretrained(en_ru_model)
-        translator_en_ru = MarianMTModel.from_pretrained(en_ru_model)
+        en_ru_dir = os.path.join(models_dir, "translation_en_ru")
+        if os.path.exists(en_ru_dir):
+            translator_tokenizer_en_ru = MarianTokenizer.from_pretrained(en_ru_dir)
+            translator_en_ru = MarianMTModel.from_pretrained(en_ru_dir)
+            logger.info("Локальная модель перевода enru успешно загружена")
+        else:
+            logger.info("Локальная модель перевода enru не найдена, загрузка подходящей модели из интернета...")
+            en_ru_model = "Helsinki-NLP/opus-mt-en-ru"
+            translator_tokenizer_en_ru = MarianTokenizer.from_pretrained(en_ru_model)
+            translator_en_ru = MarianMTModel.from_pretrained(en_ru_model)
+            logger.info("Модель перевода enru успешно загружена из интернета")
         
-        logger.info("Модели для перевода успешно загружены")
+        logger.info("Все модели для перевода успешно загружены")
         return True
     except Exception as e:
         logger.error(f"Ошибка при загрузке моделей для перевода: {e}")
