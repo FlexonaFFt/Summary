@@ -120,7 +120,8 @@ async def handle_text(message: Message):
             request_id = data.get("request_id")
 
     await message.answer("⌛ Выполняется суммаризация...")
-    await wait_for_result(message, request_id)
+    # Передаем False в is_file_summary, чтобы указать, что это суммаризация текста, а не файла
+    await wait_for_result(message, request_id, is_file_summary=False)
 
 
 async def get_file_hash(file: types.Document) -> str:
@@ -167,7 +168,7 @@ async def handle_file(message: Message):
     await message.answer("⌛ Файл отправлен, ждём результат...")
     await wait_for_result(message, request_id, cache_key=hash_key)
 
-async def wait_for_result(message: Message, request_id: str, cache_key: str = None):
+async def wait_for_result(message: Message, request_id: str, cache_key: str = None, is_file_summary: bool = True):
     for _ in range(120):
         await asyncio.sleep(2)
         async with aiohttp.ClientSession() as session:
@@ -177,10 +178,13 @@ async def wait_for_result(message: Message, request_id: str, cache_key: str = No
             summary = result.get("summary")
             if cache_key:
                 await redis.set(cache_key, summary)
-            # Сохраняем последний файл
-            if message.document:
+            # Сохраняем последний файл только если это суммаризация файла
+            if message.document and is_file_summary:
                 user_last_summary_file[message.from_user.id] = message.document
-            await message.answer(f"✅ Готово:\n\n{summary}", reply_markup=get_ask_button())
+                await message.answer(f"✅ Готово:\n\n{summary}", reply_markup=get_ask_button())
+            else:
+                # Для текстовых сообщений не показываем кнопку "Задать вопрос"
+                await message.answer(f"✅ Готово:\n\n{summary}")
             return
 
     await message.answer("⚠️ Время ожидания истекло. Повторите запрос позже.")
