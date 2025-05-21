@@ -41,9 +41,9 @@
 ## 🏗️ Как запустить проект
 
 ```bash
-git clone https://github.com/FlexonaFFt/XackatonKolpaki2025.git
+git clone https://github.com/FlexonaFFt/Summary.git
 
-cd XackatonKolpaki2025
+cd Summary
 
 docker compose build
 
