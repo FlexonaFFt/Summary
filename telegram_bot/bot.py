@@ -192,7 +192,7 @@ async def wait_for_answer(message: Message, request_id: str):
             async with session.get(f"{FASTAPI_URL}/status/{request_id}") as resp:
                 result = await resp.json()
         if result.get("status") == "done":
-            answer = result.get("answer")
+            answer = result.get("summary")  
             await message.answer(f"📌 Ответ:\n\n{answer}", reply_markup=get_exit_button())
             return
     await message.answer("⚠️ Время ожидания истекло. Попробуй позже.")
